@@ -1,0 +1,17 @@
+# File compilati e pacchetti
+*.class
+*.jar
+*.war
+
+# Cartelle di output (dove finisce il codice compilato)
+/out/
+/bin/
+/build/
+/target/
+
+# Configurazioni personali di IntelliJ IDEA
+.idea/
+*.iml
+
+# File di sistema di macOS
+.DS_Store

@@ -1,0 +1,251 @@
+/**
+ * Foglio di stile principale per l'applicazione TheKnife.
+ * <p>
+ * Definisce l'aspetto grafico globale, inclusi font, palette di colori
+ * e stili per i componenti JavaFX standard.
+ * </p>
+ * Font: Segoe UI
+ * Palette: Blu primario, Grigio scuro per testo, Grigio chiaro per sfondi.
+ * @author Simone Zamberletti
+ */
+
+/** * Stile di base applicato all'elemento radice di ogni scena.
+ * Imposta il font di default e il colore di sfondo per l'intera applicazione.
+ */
+.root {
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-background-color: #F4F4F9; /* Un grigio molto chiaro e moderno */
+}
+
+
+/* =================================================================
+   TYPOGRAPHY (TIPOGRAFIA)
+   ================================================================= */
+
+/** Stile di default per tutte le etichette (Label). */
+.label {
+    -fx-font-size: 14px;
+    -fx-text-fill: #333333; /* Grigio scuro per leggibilità */
+}
+
+/** * Stile specifico per i titoli principali delle viste.
+ * Da applicare con .getStyleClass().add("label-title").
+ * Esempio: "Benvenuto in TheKnife"
+ */
+.label-title {
+    -fx-font-size: 28px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50; /* Un blu/grigio scuro */
+}
+
+/** * Stile specifico per i sottotitoli o i titoli di sezione.
+ * Da applicare con .getStyleClass().add("label-subtitle").
+ * Esempio: "Accesso come ospite"
+ */
+.label-subtitle {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #34495e;
+}
+
+
+/* =================================================================
+   MENU BAR (BARRA DEL MENU)
+   ================================================================= */
+
+/** Stile per la barra del menu principale in cima alla finestra. */
+.menu-bar {
+    -fx-background-color: white;
+    -fx-border-color: transparent transparent #bdc3c7 transparent; /* Sottile linea inferiore */
+    -fx-border-width: 1;
+}
+
+/** Stile per il testo delle voci principali del menu (es. "Menu"). */
+.menu .label {
+    -fx-text-fill: #333333;
+    -fx-font-weight: bold;
+}
+
+/** Stile per il testo delle singole opzioni nel menu a tendina. */
+.menu-item .label {
+    -fx-font-weight: normal;
+}
+
+/** Stile per un'opzione del menu quando è selezionata o evidenziata. */
+.menu-item:focused {
+    -fx-background-color: #007BFF;
+}
+
+.menu-item:focused .label {
+    -fx-text-fill: white;
+}
+
+
+/* =================================================================
+   BUTTONS (PULSANTI)
+   ================================================================= */
+
+/** Stile di base condiviso da tutti i pulsanti. */
+.button {
+    -fx-font-size: 14px;
+    -fx-padding: 8px 18px;
+    -fx-background-radius: 6;
+    -fx-cursor: hand;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 5, 0, 0, 2);
+}
+
+/** * Stile per i pulsanti secondari o di default (es. "Annulla").
+ * Questo è lo stile predefinito se un pulsante non ha altre classi di stile.
+ */
+.button {
+    -fx-background-color: #ffffff;
+    -fx-text-fill: #333333;
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 1;
+    -fx-font-weight: bold;
+}
+.button:hover {
+    -fx-background-color: #ecf0f1; /* Leggero cambio di colore al passaggio del mouse */
+}
+
+/** * Stile per i pulsanti di azione primaria (es. "Login", "Cerca", "Registrati").
+ * Progettato per risaltare rispetto agli altri controlli.
+ * Da applicare con .getStyleClass().add("button-primary").
+ */
+.button-primary {
+    -fx-background-color: #007BFF;
+    -fx-text-fill: white;
+    -fx-border-color: transparent;
+    -fx-font-weight: bold;
+}
+.button-primary:hover {
+    -fx-background-color: #0056b3;
+}
+
+
+/* =================================================================
+   FORM ELEMENTS (CAMPI DI INPUT)
+   ================================================================= */
+
+/** Stile unificato per tutti i campi di input dei form. */
+.text-field, .password-field, .combo-box, .date-picker {
+    -fx-background-color: white;
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 6;
+    -fx-padding: 8px;
+    -fx-font-size: 14px;
+    -fx-prompt-text-fill: #7f8c8d; /* Colore del testo segnaposto (es. "Inserisci il nome") */
+}
+
+/** Effetto visivo quando un campo di input è attivo (in focus). */
+.text-field:focused, .password-field:focused, .combo-box:focused, .date-picker:focused {
+    -fx-border-color: #007BFF;
+    -fx-effect: dropshadow(three-pass-box, rgba(0, 123, 255, 0.25), 5, 0, 0, 1);
+}
+
+/** Stile per le celle della lista a tendina di una ComboBox. */
+.combo-box .list-cell {
+    -fx-background-color: white;
+    -fx-text-fill: #333333;
+}
+.combo-box .list-cell:hover {
+    -fx-background-color: #ecf0f1;
+}
+
+
+/* =================================================================
+   LIST VIEW (VISTE A LISTA)
+   ================================================================= */
+
+/** Stile per il contenitore della ListView. */
+.list-view {
+    -fx-border-color: #bdc3c7;
+    -fx-border-radius: 6;
+}
+
+/** Stile per ogni singola cella (riga) di una ListView. */
+.list-cell {
+    -fx-padding: 12px;
+    -fx-font-size: 14px;
+    -fx-background-color: transparent;
+    -fx-text-fill: #333333;
+}
+
+/** Stile di una cella vuota (es. quando la lista non ha abbastanza elementi per riempire lo spazio). */
+.list-cell:empty {
+    -fx-background-color: white;
+}
+
+/** Stile di una cella quando il mouse ci passa sopra. */
+.list-cell:filled:hover {
+    -fx-background-color: #ecf0f1;
+}
+
+/** Stile di una cella quando viene selezionata con un click. */
+.list-cell:filled:selected {
+    -fx-background-color: #007BFF;
+    -fx-text-fill: white;
+}
+
+
+/* =================================================================
+   OTHER COMPONENTS (ALTRI COMPONENTI)
+   ================================================================= */
+
+/** Rende trasparente lo sfondo dello SplitPane per ereditare quello della root. */
+.split-pane {
+    -fx-background-color: transparent;
+}
+
+/** Rende trasparente lo sfondo dell'intestazione del TabPane. */
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: transparent;
+}
+
+/** Stile per una singola scheda (Tab) non selezionata. */
+.tab-pane .tab {
+    -fx-background-color: #ecf0f1;
+    -fx-padding: 8px 20px;
+    -fx-background-radius: 6 6 0 0; /* Angoli arrotondati solo in alto */
+}
+
+/** Stile per la scheda (Tab) attualmente attiva. */
+.tab-pane .tab:selected {
+    -fx-background-color: white;
+    -fx-border-color: #bdc3c7;
+    -fx-border-width: 1 1 0 1; /* Bordo su tre lati per dare l'effetto di continuità col contenuto */
+}
+
+/** Stile per il "pollice" (il cerchio) dello Slider. */
+.slider .thumb {
+    -fx-background-color: #007BFF;
+}
+
+/** Stile per la "traccia" (la barra) dello Slider. */
+.slider .track {
+    -fx-background-color: #bdc3c7;
+}
+
+/* =================================================================
+   DIALOGS & ALERTS (FINESTRE DI DIALOGO)
+   ================================================================= */
+
+/** Stile generale per i pannelli delle finestre di dialogo (es. pop-up di errore). */
+.dialog-pane {
+    -fx-background-color: white;
+    -fx-border-radius: 8;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 15, 0.0, 0, 4);
+}
+
+/** Stile per l'area di intestazione (header) di un dialogo. */
+.dialog-pane .header-panel {
+    -fx-background-color: #f4f4f9;
+    -fx-padding: 15px;
+}
+
+/** Stile per il testo del titolo nell'header di un dialogo. */
+.dialog-pane .header-panel .label {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}

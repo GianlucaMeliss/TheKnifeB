@@ -1,0 +1,11 @@
+[
+  {
+    "idRecensione": 1,
+    "fkIdRistorante": 160,
+    "fkIdUtente": 2,
+    "voto": 3,
+    "commento": "Buonissimo, semplicemente perfetto",
+    "data": "2025-09-11",
+    "idRecensionePadre": -1
+  }
+]
