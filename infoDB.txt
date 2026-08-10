@@ -1,0 +1,105 @@
+INFO DI USO:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+CREAZIONE TABELLA
+
+-- 1. Tabella Utenti
+CREATE TABLE Utenti (
+    id_utente SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    cognome VARCHAR(100) NOT NULL,
+    username VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    data_nascita DATE,
+    domicilio VARCHAR(150) NOT NULL,
+    ruolo VARCHAR(20) NOT NULL
+);
+
+-- 2. Tabella RistorantiTheKnife
+CREATE TABLE RistorantiTheKnife (
+    id_ristorante SERIAL PRIMARY KEY,
+    nome VARCHAR(150) NOT NULL,
+    indirizzo VARCHAR(200) NOT NULL,
+    citta VARCHAR(100) NOT NULL,
+    nazione VARCHAR(100) NOT NULL,
+    latitudine DECIMAL(9,6),
+    longitudine DECIMAL(9,6),
+    prezzo DECIMAL(10,2),
+    consegna BOOLEAN DEFAULT FALSE,
+    pren_online BOOLEAN DEFAULT FALSE
+);
+
+-- 3. Tabella TipologiaCucina
+CREATE TABLE TipologiaCucina (
+    id_tipo_cucina SERIAL PRIMARY KEY,
+    nome_cucina VARCHAR(50) UNIQUE NOT NULL
+);
+
+-- 4. Tabella Ponte: Ristorante_Cucina
+CREATE TABLE Ristorante_Cucina (
+    fk_id_ristorante INT REFERENCES RistorantiTheKnife(id_ristorante) ON DELETE CASCADE,
+    fk_id_tipo_cucina INT REFERENCES TipologiaCucina(id_tipo_cucina) ON DELETE CASCADE,
+    PRIMARY KEY (fk_id_ristorante, fk_id_tipo_cucina)
+);
+
+-- 5. Tabella Recensioni
+CREATE TABLE Recensioni (
+    id_recensione SERIAL PRIMARY KEY,
+    fk_id_ristorante INT REFERENCES RistorantiTheKnife(id_ristorante) ON DELETE CASCADE,
+    fk_id_utente INT REFERENCES Utenti(id_utente) ON DELETE CASCADE,
+    id_recensione_padre INT REFERENCES Recensioni(id_recensione) ON DELETE CASCADE,
+    voto INT CHECK (voto >= 1 AND voto <= 5),
+    commento TEXT,
+    data DATE DEFAULT CURRENT_DATE
+);
+
+-- 6. Tabelle Ponte per Preferiti e Gestione
+CREATE TABLE Preferiti (
+    fk_id_utente INT REFERENCES Utenti(id_utente) ON DELETE CASCADE,
+    fk_id_ristorante INT REFERENCES RistorantiTheKnife(id_ristorante) ON DELETE CASCADE,
+    PRIMARY KEY (fk_id_utente, fk_id_ristorante)
+);
+
+CREATE TABLE Gestione_Ristoranti (
+    fk_id_utente INT REFERENCES Utenti(id_utente) ON DELETE CASCADE,
+    fk_id_ristorante INT REFERENCES RistorantiTheKnife(id_ristorante) ON DELETE CASCADE,
+    PRIMARY KEY (fk_id_utente, fk_id_ristorante)
+);

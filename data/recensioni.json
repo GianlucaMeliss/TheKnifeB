@@ -7,5 +7,14 @@
     "commento": "Buonissimo, semplicemente perfetto",
     "data": "2025-09-11",
     "idRecensionePadre": -1
+  },
+  {
+    "idRecensione": 2,
+    "fkIdRistorante": 9805,
+    "fkIdUtente": 3,
+    "voto": 3,
+    "commento": "Molto buono, Personale Scortese",
+    "data": "2026-08-08",
+    "idRecensionePadre": -1
   }
 ]
