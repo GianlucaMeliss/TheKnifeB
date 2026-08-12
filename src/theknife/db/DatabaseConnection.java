@@ -7,7 +7,7 @@ import java.sql.SQLException;
 public class DatabaseConnection {
     private static final String URL = "jdbc:postgresql://localhost:5432/theknife";
     private static final String USER = "postgres";
-    private static final String PASSWORD = "inserisci_qui_la_tua_password"; // Metti la pass dell'installazione!
+    private static final String PASSWORD = "postgres"; // Metti la pass dell'installazione!
 
     private static Connection connection = null;
 

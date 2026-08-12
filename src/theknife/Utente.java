@@ -114,6 +114,15 @@ public abstract class Utente extends OperazioniUtente{
 
     // <editor-fold desc="Metodi">
 
+    public String getNome() { return nome; }
+    public String getCognome() { return cognome; }
+    public String getUsername() { return username; }
+    public String getPassword() { return password; }
+    public LocalDate getDataNasc() { return dataNasc; }
+    public String getDomicilio() { return domicilio; }
+    public Ruolo getRuolo() { return ruolo; }
+    public Integer getIdUtente() { return idUtente; }
+
     /**
      * Verifica se un nome è valido (solo lettere e spazi).
      * @param nome Nome da validare

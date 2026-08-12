@@ -336,7 +336,7 @@ public class UtenteRegistrato extends Utente {
      * Restituisce l'identificatore univoco (ID) dell'utente registrato.
      * @return L'{@code Integer} che rappresenta l'ID dell'utente.
      */
-    Integer getIdUtente() {
+    public Integer getIdUtente() {
         return idUtente;
     }
 

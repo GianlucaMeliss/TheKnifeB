@@ -30,7 +30,7 @@ public class MainTestDB {
 
         // Dati finti per il test
         String testUsername = "mario.rossi";
-        // Usiamo una stringa finta che simula una password cifrata come le vostre
+        // Usiamo una stringa finta che simula una password cifrata
         String testPasswordCifrata = "xYzPasswordCifrata123==";
 
         // TEST 2: Registrazione Utente

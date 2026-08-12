@@ -48,13 +48,14 @@ public class UtenteDAOImpl implements UtenteDAO {
         try (Connection conn = DatabaseConnection.getInstance();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, utente.nome);
-            stmt.setString(2, utente.cognome);
-            stmt.setString(3, utente.username);
-            stmt.setString(4, utente.password); // Deve già essere cifrata da CifraturaUtils
-            stmt.setDate(5, utente.dataNasc != null ? Date.valueOf(utente.dataNasc) : null);
-            stmt.setString(6, utente.domicilio);
-            stmt.setString(7, utente.ruolo.toString());
+            // Usiamo i GETTER invece di accedere direttamente alle variabili!
+            stmt.setString(1, utente.getNome());
+            stmt.setString(2, utente.getCognome());
+            stmt.setString(3, utente.getUsername());
+            stmt.setString(4, utente.getPassword());
+            stmt.setDate(5, utente.getDataNasc() != null ? Date.valueOf(utente.getDataNasc()) : null);
+            stmt.setString(6, utente.getDomicilio());
+            stmt.setString(7, utente.getRuolo().toString());
 
             int affectedRows = stmt.executeUpdate();
             return affectedRows > 0;
