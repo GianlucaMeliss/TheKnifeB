@@ -21,7 +21,9 @@
  */
 package theknife;
 
-    import javafx.collections.FXCollections;
+    import theknife.client.RmiClientManager;
+import theknife.remote.TheKnifeService;
+import javafx.collections.FXCollections;
     import javafx.collections.ObservableList;
     import javafx.concurrent.Task;
     import javafx.geometry.Insets;
@@ -115,17 +117,20 @@ package theknife;
                         String cuisine = item.tipoCucina.toString().replace("[", "").replace("]", "");
                         detailsLabel.setText(cuisine);
 
-                        ArrayList<Recensione> allReviews = new UtenteNonRegistrato("").caricaRecensioni();
-                        double avgRating = allReviews.stream()
-                                .filter(rev -> rev.fkIdRistorante.equals(item.idRistorante) && rev.voto != -1)
-                                .mapToInt(rev -> rev.voto)
-                                .average().orElse(0.0);
-                        long reviewCount = allReviews.stream()
-                                .filter(rev -> rev.fkIdRistorante.equals(item.idRistorante) && rev.voto != -1)
-                                .count();
-
-                        DecimalFormat df = new DecimalFormat("#.0");
-                        ratingLabel.setText("Valutazione: " + df.format(avgRating) + "/5 (" + reviewCount + " recensioni)");
+                    try {
+                        TheKnifeService service = RmiClientManager.getInstance().getService();
+                        if (service != null) {
+                            double[] stats = service.getStatisticheRistorante(item.idRistorante);
+                            double avgRating = stats[0];
+                            long reviewCount = (long) stats[1];
+                            DecimalFormat df = new DecimalFormat("#.0");
+                            ratingLabel.setText("Valutazione: " + df.format(avgRating) + "/5 (" + reviewCount + " recensioni)");
+                        } else {
+                            ratingLabel.setText("Valutazione: N/D");
+                        }
+                    } catch (Exception e) {
+                        ratingLabel.setText("Valutazione: Errore");
+                    }
 
                         String price = String.format("Prezzo Medio: %.2f€", item.prezzo);
                         String delivery = item.consegna ? "✓ Delivery" : "✗ Delivery";
@@ -150,13 +155,9 @@ package theknife;
                 @Override
                 protected ObservableList<Ristorante> call() throws Exception {
                     if (currentUser == null) return FXCollections.emptyObservableList();
-                    ArrayList<Integer> ownedIds = currentUser.scaricaRistorantiPosseduti();
-                    if(ownedIds.isEmpty()) return FXCollections.emptyObservableList();
-                    ArrayList<Ristorante> tuttiRistoranti = Gestione.Deserializer.fromJsonFile(
-                            "data/ristoranti.json", Ristorante.class, new Ristorante.RistoranteDeserializer());
-                    ArrayList<Ristorante> ownedRestaurants = tuttiRistoranti.stream()
-                            .filter(r -> ownedIds.contains(r.idRistorante))
-                            .collect(Collectors.toCollection(ArrayList::new));
+                    
+                    // Recupera direttamente la lista dei ristoranti gestiti dal server
+                    ArrayList<Ristorante> ownedRestaurants = currentUser.getRistorantiGestiti();
                     return FXCollections.observableArrayList(ownedRestaurants);
                 }
             };
@@ -164,7 +165,7 @@ package theknife;
                 myRestaurants = loadTask.getValue();
                 restaurantsListView.setItems(myRestaurants);
             });
-            loadTask.setOnFailed(e -> mainApp.showError("Errore nel caricamento dei ristoranti del ristoratore."));
+            loadTask.setOnFailed(e -> mainApp.showError("Errore nel caricamento dei ristoranti dal server."));
             new Thread(loadTask).start();
         }
         private void createUI() {
@@ -203,10 +204,10 @@ package theknife;
             Task<ObservableList<Recensione>> reviewsTask = new Task<>() {
                 @Override
                 protected ObservableList<Recensione> call() throws Exception {
-                    ArrayList<Recensione> allReviews = new UtenteNonRegistrato("").caricaRecensioni();
-                    ArrayList<Recensione> restaurantReviews = allReviews.stream()
-                            .filter(r -> r.fkIdRistorante.equals(restaurant.idRistorante))
-                            .collect(Collectors.toCollection(ArrayList::new));
+                    TheKnifeService service = RmiClientManager.getInstance().getService();
+                    if (service == null) throw new Exception("Servizio RMI non disponibile.");
+                    
+                    ArrayList<Recensione> restaurantReviews = service.getRecensioniByRistorante(restaurant.idRistorante);
                     return FXCollections.observableArrayList(restaurantReviews);
                 }
             };
@@ -215,7 +216,7 @@ package theknife;
                 replyTextArea.clear();
                 btnReply.setDisable(true);
             });
-            reviewsTask.setOnFailed(e -> mainApp.showError("Errore nel caricamento delle recensioni."));
+            reviewsTask.setOnFailed(e -> mainApp.showError("Errore nel caricamento delle recensioni dal server."));
             new Thread(reviewsTask).start();
         }
         private void sendReply() {

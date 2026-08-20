@@ -20,6 +20,8 @@
  * Sede: VA
  */
 package theknife;
+import theknife.client.RmiClientManager;
+import theknife.remote.TheKnifeService;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -108,17 +110,22 @@ public class GuestSearchView {
                     nameLabel.setText(item.nome + " (" + item.citta + ")");
                     String cuisine = item.tipoCucina.toString().replace("[", "").replace("]", "");
                     detailsLabel.setText(cuisine);
-                    ArrayList<Recensione> allReviews = new UtenteNonRegistrato("").caricaRecensioni();
-                    double avgRating = allReviews.stream()
-                            .filter(rev -> rev.fkIdRistorante.equals(item.idRistorante) && rev.voto != -1)
-                            .mapToInt(rev -> rev.voto)
-                            .average().orElse(0.0);
-                    long reviewCount = allReviews.stream()
-                            .filter(rev -> rev.fkIdRistorante.equals(item.idRistorante) && rev.voto != -1)
-                            .count();
 
-                    DecimalFormat df = new DecimalFormat("#.0");
-                    ratingLabel.setText("Valutazione: " + df.format(avgRating) + "/5 (" + reviewCount + " recensioni)");
+                    try {
+                        TheKnifeService service = RmiClientManager.getInstance().getService();
+                        if (service != null) {
+                            double[] stats = service.getStatisticheRistorante(item.idRistorante);
+                            double avgRating = stats[0];
+                            long reviewCount = (long) stats[1];
+                            DecimalFormat df = new DecimalFormat("#.0");
+                            ratingLabel.setText("Valutazione: " + df.format(avgRating) + "/5 (" + reviewCount + " recensioni)");
+                        } else {
+                            ratingLabel.setText("Valutazione: N/D");
+                        }
+                    } catch (Exception e) {
+                        ratingLabel.setText("Valutazione: Errore");
+                    }
+
                     String price = String.format("Prezzo Medio: %.2f€", item.prezzo);
                     String delivery = item.consegna ? "✓ Delivery" : "✗ Delivery";
                     String reservation = item.pren_online ? "✓ Prenotazione Online" : "✗ Prenotazione Online";
@@ -242,39 +249,30 @@ public class GuestSearchView {
         loadingIndicator.setVisible(true);
         restaurantList.setItems(FXCollections.emptyObservableList());
         restaurantList.setPlaceholder(new Label("Ricerca in corso..."));
+        
         Task<ObservableList<Ristorante>> searchTask = new Task<>() {
             @Override
             protected ObservableList<Ristorante> call() throws Exception {
-                ArrayList<Ristorante> tuttiRistoranti = Gestione.Deserializer.fromJsonFile(
-                        "data/ristoranti.json", Ristorante.class, new Ristorante.RistoranteDeserializer());
-                ArrayList<Recensione> tutteRecensioni = new UtenteNonRegistrato("").caricaRecensioni();
-                Map<CriterioRicerca, String> criteriIniziali = new HashMap<>();
-                criteriIniziali.put(CriterioRicerca.CITTA, location);
+                TheKnifeService service = RmiClientManager.getInstance().getService();
+                if (service == null) throw new Exception("Servizio RMI non disponibile.");
+
                 String tipoCucinaSelezionato = cuisineTypeCombo.getValue();
-                if (tipoCucinaSelezionato != null && !tipoCucinaSelezionato.equals("Qualsiasi")) {
-                    String enumStyleCuisine = tipoCucinaSelezionato.toUpperCase().replace(" ", "_");
-                    criteriIniziali.put(CriterioRicerca.TIPO_CUCINA, enumStyleCuisine);
-                }
-                UtenteNonRegistrato operatoreRicerca = new UtenteNonRegistrato(location);
-                ArrayList<Ristorante> risultatiParziali = operatoreRicerca.cercaRistorante(tuttiRistoranti, criteriIniziali);
-                Float minPrice = parsePrice(minPriceField.getText(), 0f);
-                Float maxPrice = parsePrice(maxPriceField.getText(), Float.MAX_VALUE);
+                String enumStyleCuisine = (tipoCucinaSelezionato != null && !tipoCucinaSelezionato.equals("Qualsiasi")) 
+                        ? tipoCucinaSelezionato.toUpperCase().replace(" ", "_") : null;
+                
+                Float minPrice = parsePrice(minPriceField.getText(), null);
+                Float maxPrice = parsePrice(maxPriceField.getText(), null);
                 double minRating = ratingSlider.getValue();
-                ArrayList<Ristorante> risultatiFinali = risultatiParziali.stream()
-                        .filter(r -> r.prezzo >= minPrice && r.prezzo <= maxPrice)
-                        .filter(r -> !deliveryCheck.isSelected() || r.consegna)
-                        .filter(r -> !reservationCheck.isSelected() || r.pren_online)
-                        .filter(r -> {
-                            if (minRating == 0) return true;
-                            double avgRating = tutteRecensioni.stream()
-                                    .filter(rev -> rev.fkIdRistorante.equals(r.idRistorante) && rev.voto != -1)
-                                    .mapToInt(rev -> rev.voto)
-                                    .average()
-                                    .orElse(0.0);
-                            return avgRating >= minRating;
-                        })
-                        .collect(Collectors.toCollection(ArrayList::new));
-                return FXCollections.observableArrayList(risultatiFinali);
+                
+                ArrayList<Ristorante> risultati = service.cercaRistorantiAvanzata(
+                    location, null, enumStyleCuisine, 
+                    minPrice, maxPrice, 
+                    deliveryCheck.isSelected(), 
+                    reservationCheck.isSelected(),
+                    minRating > 0 ? minRating : null
+                );
+                
+                return FXCollections.observableArrayList(risultati);
             }
         };
         searchTask.setOnSucceeded(e -> {

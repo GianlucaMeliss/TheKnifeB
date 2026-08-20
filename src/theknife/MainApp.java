@@ -21,6 +21,7 @@
  */
 package theknife;
 
+import theknife.client.RmiClientManager;
 import javafx.animation.PauseTransition;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -75,9 +76,18 @@ public class MainApp extends Application {
 
     @Override
     public void start(Stage primaryStage) {
+        // Tenta la connessione al server RMI all'avvio
+        boolean connected = RmiClientManager.getInstance().connect();
+
         this.primaryStage = primaryStage;
         this.primaryStage.setTitle("TheKnife");
         initRootLayout();
+
+        if (!connected) {
+            // Se la connessione fallisce, avvisa l'utente ma permetti l'apertura (per sola consultazione se possibile)
+            showError("Attenzione: Impossibile connettersi al server remoto.\nVerifica la connessione e riprova.");
+        }
+
         showStartMenu();
         updateMenuVisibility();
     }

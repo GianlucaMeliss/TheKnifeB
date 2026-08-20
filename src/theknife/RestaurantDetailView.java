@@ -21,6 +21,8 @@
  */
 package theknife;
 
+import theknife.client.RmiClientManager;
+import theknife.remote.TheKnifeService;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -212,55 +214,56 @@ public class RestaurantDetailView {
             updateFavoriteButtonState(isAlreadyFavorite);
         }
 
-        // Carica recensioni dal sistema
-        ArrayList<Recensione> allReviews = new UtenteNonRegistrato("").caricaRecensioni();
-        ArrayList<Utente> allUsers = Gestione.Deserializer.fromJsonFile("data/utenti.json", Utente.class, new Utente.UtenteDeserializer());
+        try {
+            TheKnifeService service = RmiClientManager.getInstance().getService();
+            if (service == null) throw new Exception("Servizio RMI non disponibile.");
 
-        // Filtra recensioni del ristorante
-        List<Recensione> restaurantReviewsAndReplies = allReviews.stream()
-                .filter(r -> r.fkIdRistorante.equals(ristorante.idRistorante))
-                .collect(Collectors.toList());
+            // Carica recensioni dal server
+            ArrayList<Recensione> restaurantReviewsAndReplies = service.getRecensioniByRistorante(ristorante.idRistorante);
 
-        // Separa recensioni principali da risposte
-        List<Recensione> mainReviews = restaurantReviewsAndReplies.stream()
-                .filter(r -> r.voto != -1)
-                .collect(Collectors.toList());
-        List<Recensione> replies = restaurantReviewsAndReplies.stream()
-                .filter(r -> r.voto == -1)
-                .collect(Collectors.toList());
+            // Separa recensioni principali da risposte
+            List<Recensione> mainReviews = restaurantReviewsAndReplies.stream()
+                    .filter(r -> r.voto != -1)
+                    .collect(Collectors.toList());
+            List<Recensione> replies = restaurantReviewsAndReplies.stream()
+                    .filter(r -> r.voto == -1)
+                    .collect(Collectors.toList());
 
-        // Associa recensione ↔ risposta
-        List<ReviewWrapper> reviewWrappers = new ArrayList<>();
-        for (Recensione review : mainReviews) {
-            String authorName = allUsers.stream()
-                    .filter(u -> u.idUtente.equals(review.fkIdUtente))
-                    .findFirst().map(u -> u.username).orElse("Anonimo");
-            review.authorUsername = authorName;
+            // Associa recensione ↔ risposta
+            List<ReviewWrapper> reviewWrappers = new ArrayList<>();
+            for (Recensione review : mainReviews) {
+                Recensione reply = replies.stream()
+                        .filter(r -> r.idRecensionePadre.equals(review.idRecensione))
+                        .findFirst().orElse(null);
 
-            Recensione reply = replies.stream()
-                    .filter(r -> r.idRecensionePadre.equals(review.idRecensione))
-                    .findFirst().orElse(null);
+                reviewWrappers.add(new ReviewWrapper(review, reply));
+            }
 
-            reviewWrappers.add(new ReviewWrapper(review, reply));
+            // Statistiche
+            double[] stats = service.getStatisticheRistorante(ristorante.idRistorante);
+            double avg = stats[0];
+            int reviewCount = (int) stats[1];
+
+            DecimalFormat df = new DecimalFormat("#.0");
+            String avgRating = df.format(avg);
+            String formattedPrice = String.format("%.2f €", ristorante.prezzo);
+
+            // Aggiorna etichette
+            restaurantNameLabel.setText(ristorante.nome);
+            restaurantCuisineLabel.setText(ristorante.tipoCucina.toString().replace("[", "").replace("]", ""));
+            cityLabel.setText(ristorante.citta);
+            priceLabel.setText(formattedPrice);
+            avgRatingLabel.setText(avgRating + "/5 (" + reviewCount + " recensioni)");
+            deliveryLabel.setText(ristorante.consegna ? "Sì" : "No");
+            reservationLabel.setText(ristorante.pren_online ? "Sì" : "No");
+
+            // Popola la lista
+            reviewsListView.setItems(FXCollections.observableArrayList(reviewWrappers));
+
+        } catch (Exception e) {
+            System.err.println("Errore caricamento dettagli ristorante: " + e.getMessage());
+            mainApp.showError("Errore nel recupero dei dati dal server.");
         }
-
-        // Calcola valutazione media
-        double avg = mainReviews.stream().mapToInt(r -> r.voto).average().orElse(0.0);
-        DecimalFormat df = new DecimalFormat("#.0");
-        String avgRating = df.format(avg);
-        String formattedPrice = String.format("%.2f €", ristorante.prezzo);
-
-        // Aggiorna etichette
-        restaurantNameLabel.setText(ristorante.nome);
-        restaurantCuisineLabel.setText(ristorante.tipoCucina.toString().replace("[", "").replace("]", ""));
-        cityLabel.setText(ristorante.citta);
-        priceLabel.setText(formattedPrice);
-        avgRatingLabel.setText(avgRating + "/5 (" + mainReviews.size() + " recensioni)");
-        deliveryLabel.setText(ristorante.consegna ? "Sì" : "No");
-        reservationLabel.setText(ristorante.pren_online ? "Sì" : "No");
-
-        // Popola la lista
-        reviewsListView.setItems(FXCollections.observableArrayList(reviewWrappers));
     }
 
     /**

@@ -20,6 +20,8 @@
  * Sede: VA
  */
 package theknife;
+import theknife.client.RmiClientManager;
+import theknife.remote.TheKnifeService;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -130,24 +132,17 @@ public class LoginView {
         Task<Utente> loginTask = new Task<>() {
             @Override
             protected Utente call() throws Exception {
-                // Eseguito su un thread separato per non bloccare la UI
-                ArrayList<Utente> utenti = Gestione.Deserializer.fromJsonFile(
-                        "data/utenti.json",
-                        Utente.class,
-                        new Utente.UtenteDeserializer()
-                );
-
-                // Scansiona la lista utenti alla ricerca di una corrispondenza
-                for (Utente utente : utenti) {
-                    if (utente.username.equals(username)) {
-                        // Se l'utente viene trovato, decifra la password e la confronta
-                        String decryptedPassword = Gestione.CifraturaUtils.decripta(utente.password);
-                        if (decryptedPassword.equals(password)) {
-                            return utente; // Successo: restituisce l'oggetto Utente
-                        }
-                    }
+                // Recupera il servizio remoto
+                TheKnifeService service = RmiClientManager.getInstance().getService();
+                if (service == null) {
+                    throw new Exception("Connessione al server non stabilita.");
                 }
-                return null; // Fallimento: utente non trovato o password errata
+
+                // Cifriamo la password prima dell'invio (come richiesto dal server)
+                String encryptedPassword = Gestione.CifraturaUtils.cripta(password);
+
+                // Chiamata RMI
+                return service.login(username, encryptedPassword);
             }
         };
 

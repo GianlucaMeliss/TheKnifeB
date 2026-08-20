@@ -20,6 +20,8 @@
  * Sede: VA
  */
 package theknife;
+import theknife.client.RmiClientManager;
+import theknife.remote.TheKnifeService;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -105,21 +107,18 @@ public class ClientDashboardView {
         Task<ObservableList<Ristorante>> refreshTask = new Task<>() {
             @Override
             protected ObservableList<Ristorante> call() throws Exception {
-                ArrayList<Integer> favoriteIds = currentUser.VisualizzaPreferiti().getOrDefault(currentUser.idUtente, new ArrayList<>());
-                if (favoriteIds.isEmpty()) {
-                    return FXCollections.observableArrayList();
-                }
-                ArrayList<Ristorante> tuttiRistoranti = Gestione.Deserializer.fromJsonFile("data/ristoranti.json", Ristorante.class, new Ristorante.RistoranteDeserializer());
-                return FXCollections.observableArrayList(tuttiRistoranti.stream()
-                        .filter(r -> favoriteIds.contains(r.idRistorante))
-                        .collect(Collectors.toList()));
+                TheKnifeService service = RmiClientManager.getInstance().getService();
+                if (service == null) throw new Exception("Servizio RMI non disponibile.");
+                
+                ArrayList<Ristorante> preferiti = service.getPreferitiUtente(currentUser.idUtente);
+                return FXCollections.observableArrayList(preferiti);
             }
         };
         refreshTask.setOnSucceeded(e -> {
             favoriteRestaurants = refreshTask.getValue();
             favoritesListView.setItems(favoriteRestaurants);
         });
-        refreshTask.setOnFailed(e -> mainApp.showError("Errore durante l'aggiornamento dei preferiti."));
+        refreshTask.setOnFailed(e -> mainApp.showError("Errore durante l'aggiornamento dei preferiti: " + refreshTask.getException().getMessage()));
         new Thread(refreshTask).start();
     }
 
@@ -181,14 +180,20 @@ public class ClientDashboardView {
                     nameLabel.setText(item.nome + " (" + item.citta + ")");
                     String cuisine = item.tipoCucina.toString().replace("[", "").replace("]", "");
                     detailsLabel.setText(cuisine);
-                    ArrayList<Recensione> allReviews = new UtenteNonRegistrato("").caricaRecensioni();
-                    double avgRating = allReviews.stream()
-                            .filter(rev -> rev.fkIdRistorante.equals(item.idRistorante) && rev.voto != -1)
-                            .mapToInt(rev -> rev.voto).average().orElse(0.0);
-                    long reviewCount = allReviews.stream()
-                            .filter(rev -> rev.fkIdRistorante.equals(item.idRistorante) && rev.voto != -1).count();
-                    DecimalFormat df = new DecimalFormat("#.0");
-                    ratingLabel.setText("Valutazione: " + df.format(avgRating) + "/5 (" + reviewCount + " recensioni)");
+                    try {
+                        TheKnifeService service = RmiClientManager.getInstance().getService();
+                        if (service != null) {
+                            double[] stats = service.getStatisticheRistorante(item.idRistorante);
+                            double avgRating = stats[0];
+                            long reviewCount = (long) stats[1];
+                            DecimalFormat df = new DecimalFormat("#.0");
+                            ratingLabel.setText("Valutazione: " + df.format(avgRating) + "/5 (" + reviewCount + " recensioni)");
+                        } else {
+                            ratingLabel.setText("Valutazione: N/D");
+                        }
+                    } catch (Exception e) {
+                        ratingLabel.setText("Valutazione: Errore");
+                    }
                     String price = String.format("Prezzo Medio: %.2f€", item.prezzo);
                     String delivery = item.consegna ? "✓ Delivery" : "✗ Delivery";
                     String reservation = item.pren_online ? "✓ Prenotazione Online" : "✗ Prenotazione Online";
@@ -212,17 +217,18 @@ public class ClientDashboardView {
         loadingIndicator.setVisible(true);
         Task<DashboardData> loadDataTask = new Task<>() {
             @Override
-            protected DashboardData call() {
-                ArrayList<Integer> fids = currentUser.VisualizzaPreferiti().getOrDefault(currentUser.idUtente, new ArrayList<>());
-                ObservableList<Ristorante> favs;
-                if (!fids.isEmpty()) {
-                    ArrayList<Ristorante> all = Gestione.Deserializer.fromJsonFile("data/ristoranti.json", Ristorante.class, new Ristorante.RistoranteDeserializer());
-                    favs = FXCollections.observableArrayList(all.stream().filter(r -> fids.contains(r.idRistorante)).collect(Collectors.toList()));
-                } else {
-                    favs = FXCollections.observableArrayList();
-                }
-                ArrayList<Recensione> allrevs = new UtenteNonRegistrato("").caricaRecensioni();
-                ObservableList<Recensione> myrevs = FXCollections.observableArrayList(allrevs.stream().filter(r -> r.fkIdUtente.equals(currentUser.idUtente)).collect(Collectors.toList()));
+            protected DashboardData call() throws Exception {
+                TheKnifeService service = RmiClientManager.getInstance().getService();
+                if (service == null) throw new Exception("Servizio RMI non disponibile.");
+
+                // Carica i preferiti dal server
+                ArrayList<Ristorante> favList = service.getPreferitiUtente(currentUser.idUtente);
+                ObservableList<Ristorante> favs = FXCollections.observableArrayList(favList);
+
+                // Carica le recensioni dell'utente dal server
+                ArrayList<Recensione> myRevList = service.getRecensioniByUtente(currentUser.idUtente);
+                ObservableList<Recensione> myrevs = FXCollections.observableArrayList(myRevList);
+                
                 return new DashboardData(favs, myrevs);
             }
         };
@@ -276,12 +282,11 @@ public class ClientDashboardView {
         }
         TreeItem<Object> root = new TreeItem<>();
         Map<Integer, TreeItem<Object>> nodes = new HashMap<>();
-        ArrayList<Ristorante> allRest = Gestione.Deserializer.fromJsonFile("data/ristoranti.json", Ristorante.class, new Ristorante.RistoranteDeserializer());
-        ArrayList<Utente> allUsers = Gestione.Deserializer.fromJsonFile("data/utenti.json", Utente.class, new Utente.UtenteDeserializer());
+
         for (Recensione rev : userReviews) {
-            String rName = allRest.stream().filter(r -> r.idRistorante == rev.fkIdRistorante).findFirst().map(r -> r.nome).orElse("N/A");
-            String aName = allUsers.stream().filter(u -> u.idUtente.equals(rev.fkIdUtente)).findFirst().map(u -> u.username).orElse("N/A");
-            rev.authorUsername = aName;
+            // Utilizziamo il nome del ristorante se già presente nell'oggetto (popolato dal server)
+            String rName = (rev.restaurantName != null) ? rev.restaurantName : "Ristorante #" + rev.fkIdRistorante;
+            
             nodes.putIfAbsent(rev.fkIdRistorante, new TreeItem<>(rName));
             nodes.get(rev.fkIdRistorante).getChildren().add(new TreeItem<>(rev));
         }
