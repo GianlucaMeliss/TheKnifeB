@@ -21,10 +21,8 @@
  */
 package theknife;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
+import theknife.client.RmiClientManager;
+import theknife.remote.TheKnifeService;
 
 import java.lang.reflect.Type;
 import java.time.LocalDate;
@@ -82,86 +80,49 @@ public class UtenteNonRegistrato extends OperazioniUtente{
                                  String domicilio
     ) {
         try {
-            Ruolo ruolo = Ruolo.valueOf(ruoloInput.toUpperCase());
-            password = Gestione.CifraturaUtils.cripta(password);
-            LocalDate dataNascita = LocalDate.parse(dataNascitaStr);
-
-            if (!VerificaUtente(username, ruolo)) {
-                Utente u;
-                if (ruolo == Ruolo.CLIENTE) {
-                    u = new UtenteRegistrato(nome, cognome, username, password, dataNascita, domicilio, ruolo);
-                } else {
-                    u = new Ristoratore(nome, cognome, username, password, dataNascita, domicilio, ruolo);
-                }
-
-                u.aggiungiUtente(u);
-                return true;
-            } else {
-                System.out.println("Utente già esistente con questo username per il ruolo scelto.");
+            TheKnifeService service = RmiClientManager.getInstance().getService();
+            if (service == null) {
+                System.err.println("Servizio RMI non disponibile.");
                 return false;
             }
-        } catch (IllegalArgumentException e) {
-            System.out.println("Ruolo non valido.");
-        } catch (DateTimeParseException e) {
-            System.out.println("Formato della data di nascita non corretto.");
+
+            Ruolo ruolo = Ruolo.valueOf(ruoloInput.toUpperCase());
+            String passwordCifrata = Gestione.CifraturaUtils.cripta(password);
+            LocalDate dataNascita = LocalDate.parse(dataNascitaStr);
+
+            Utente u;
+            if (ruolo == Ruolo.CLIENTE) {
+                u = new UtenteRegistrato(nome, cognome, username, passwordCifrata, dataNascita, domicilio, ruolo);
+            } else {
+                u = new Ristoratore(nome, cognome, username, passwordCifrata, dataNascita, domicilio, ruolo);
+            }
+
+            return service.registraUtente(u);
+
         } catch (Exception e) {
-            System.out.println("Errore nei dati inseriti: " + e.getMessage());
+            System.err.println("Errore nei dati inseriti o di comunicazione: " + e.getMessage());
         }
         return false;
     }
 
     /**
-     * Recupera le recensioni associate a una lista specifica di ristoranti.
-     * Il metodo carica tutte le recensioni dal file di persistenza e le filtra
-     * per restituire solo quelle pertinenti ai ristoranti forniti.
+     * Recupera le recensioni associate a una lista specifica di ristoranti tramite il server.
      * @param listaRistoranti La lista di oggetti <code>Ristorante</code> per cui si desidera visualizzare le recensioni.
-     * @return Un <code>ArrayList</code> di oggetti <code>Recensione</code> che corrispondono ai ristoranti nella lista data.
+     * @return Un <code>ArrayList</code> di oggetti <code>Recensione</code>.
      */
     public ArrayList<Recensione> visualizzaRecensioni(ArrayList<Ristorante> listaRistoranti){
-        String filePath="data/recensioni.json";
-        ArrayList<Recensione> listaRecensioni= new ArrayList<>();
         ArrayList<Recensione> recensioniRisultanti= new ArrayList<>();
-        listaRecensioni= caricaRecensioni();
-        for(Ristorante ristorante : listaRistoranti)
-        {
-            for(Recensione recensione: listaRecensioni){
-                if(ristorante.idRistorante==recensione.fkIdRistorante) recensioniRisultanti.add(recensione);
+        try {
+            TheKnifeService service = RmiClientManager.getInstance().getService();
+            if (service == null) return recensioniRisultanti;
+
+            for(Ristorante ristorante : listaRistoranti) {
+                recensioniRisultanti.addAll(service.getRecensioniByRistorante(ristorante.idRistorante));
             }
+        } catch (Exception e) {
+            System.err.println("Errore recupero recensioni: " + e.getMessage());
         }
         return recensioniRisultanti;
     }
 
-    /**
-     * Carica la lista completa delle recensioni dal file JSON di persistenza.
-     * Utilizza un deserializzatore custom per interpretare correttamente i dati
-     * dal file <code>recensioni.json</code>.
-     * @return Un <code>ArrayList</code> contenente tutte le recensioni presenti nel sistema.
-     */
-    public ArrayList<Recensione> caricaRecensioni() {
-        String filePath = "data/recensioni.json";
-        Type listType = new TypeToken<ArrayList<Recensione>>(){}.getType();
-        JsonDeserializer<Recensione> adapter = new Recensione.RecensioneDeserializer();
-
-        return Gestione.Deserializer.fromJsonFile(filePath, Recensione.class, adapter);
-    }
-
-    /**
-     * Verifica l'esistenza di un utente con un dato nickname e ruolo.
-     * Controlla nel file <code>utenti.json</code> se esiste già un utente
-     * registrato con la stessa combinazione di username e ruolo.
-     * @param nickname Il nickname (username) da verificare.
-     * @param r Il ruolo (<code>CLIENTE</code> o <code>RISTORATORE</code>) associato al nickname.
-     * @return <code>true</code> se un utente con quel nickname e ruolo esiste già, <code>false</code> altrimenti.
-     */
-    static boolean VerificaUtente(String nickname,Ruolo r){
-        ArrayList<Utente> listaUtenti = new ArrayList<>();
-        listaUtenti=Gestione.Deserializer.fromJsonFile(
-                "data/utenti.json",
-                Utente.class,
-                new Utente.UtenteDeserializer());
-        for(Utente u: listaUtenti){
-            if(u.username.equals(nickname) && u.ruolo.equals(r))return true;
-        }
-        return false;
-    }
 }
