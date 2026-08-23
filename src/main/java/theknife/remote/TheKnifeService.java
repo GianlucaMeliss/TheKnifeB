@@ -10,9 +10,9 @@ import java.util.ArrayList;
  * Definisce i metodi che il server mette a disposizione dei client tramite RMI.
  */
 public interface TheKnifeService extends Remote {
-    
+
     // --- Gestione Utenti ---
-    
+
     /**
      * Effettua il login di un utente.
      * @param username lo username dell'utente
@@ -31,6 +31,11 @@ public interface TheKnifeService extends Remote {
     boolean registraUtente(Utente utente) throws RemoteException;
 
     // --- Gestione Ristoranti ---
+
+    /**
+     * Recupera la lista di tutti i ristoranti nel sistema.
+     */
+    ArrayList<Ristorante> getAllRistoranti() throws RemoteException;
 
     /**
      * Ricerca avanzata di ristoranti tramite filtri multipli eseguita sul server.

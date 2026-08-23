@@ -109,7 +109,7 @@ public class ClientDashboardView {
             protected ObservableList<Ristorante> call() throws Exception {
                 TheKnifeService service = RmiClientManager.getInstance().getService();
                 if (service == null) throw new Exception("Servizio RMI non disponibile.");
-                
+
                 ArrayList<Ristorante> preferiti = service.getPreferitiUtente(currentUser.idUtente);
                 return FXCollections.observableArrayList(preferiti);
             }
@@ -228,7 +228,7 @@ public class ClientDashboardView {
                 // Carica le recensioni dell'utente dal server
                 ArrayList<Recensione> myRevList = service.getRecensioniByUtente(currentUser.idUtente);
                 ObservableList<Recensione> myrevs = FXCollections.observableArrayList(myRevList);
-                
+
                 return new DashboardData(favs, myrevs);
             }
         };
@@ -286,7 +286,7 @@ public class ClientDashboardView {
         for (Recensione rev : userReviews) {
             // Utilizziamo il nome del ristorante se già presente nell'oggetto (popolato dal server)
             String rName = (rev.restaurantName != null) ? rev.restaurantName : "Ristorante #" + rev.fkIdRistorante;
-            
+
             nodes.putIfAbsent(rev.fkIdRistorante, new TreeItem<>(rName));
             nodes.get(rev.fkIdRistorante).getChildren().add(new TreeItem<>(rev));
         }
@@ -333,84 +333,116 @@ public class ClientDashboardView {
 
     /**
      * Gestisce l'azione del pulsante per modificare la recensione selezionata.
-     * <p>
-     * Apre il {@link ReviewDialog} in modalità "modifica", pre-compilandolo con i dati
-     * della recensione esistente.
-     * </p>
      */
     private void showEditReviewDialog() {
-        ArrayList<Ristorante> allRestaurants = Gestione.Deserializer.fromJsonFile("data/ristoranti.json", Ristorante.class, new Ristorante.RistoranteDeserializer());
-        if (allRestaurants == null) {
-            mainApp.showError("Errore caricamento ristoranti.");
-            return;
-        }
-        TreeItem<Object> selectedItem = reviewsTreeView.getSelectionModel().getSelectedItem();
-        if (selectedItem == null || !(selectedItem.getValue() instanceof Recensione)) {
-            mainApp.showError("Seleziona una recensione da modificare.");
-            return;
-        }
-        Recensione selectedReview = (Recensione) selectedItem.getValue();
-        ReviewDialog dialog = new ReviewDialog(allRestaurants, selectedReview);
-        Optional<Recensione> result = dialog.showAndWait();
-        result.ifPresent(editedReview -> {
-            editedReview.fkIdUtente = currentUser.getIdUtente();
-            editedReview.idRecensione = selectedReview.idRecensione;
-            Task<Boolean> updateTask = new Task<>() {
-                @Override
-                protected Boolean call() {
-                    return currentUser.modificaRecensione(selectedReview.idRecensione, editedReview);
-                }
-            };
-            updateTask.setOnSucceeded(e -> {
-                if (updateTask.getValue()) {
-                    mainApp.showTemporaryInfo("Recensione modificata.");
-                    int index = userReviews.indexOf(selectedReview);
-                    if (index != -1) {
-                        userReviews.set(index, editedReview);
-                        buildReviewTree();
+        loadingIndicator.setVisible(true);
+        Task<ArrayList<Ristorante>> loadRestTask = new Task<>() {
+            @Override
+            protected ArrayList<Ristorante> call() throws Exception {
+                TheKnifeService service = RmiClientManager.getInstance().getService();
+                if (service == null) throw new Exception("Servizio RMI non disponibile.");
+                return service.getAllRistoranti();
+            }
+        };
+
+        loadRestTask.setOnSucceeded(e -> {
+            loadingIndicator.setVisible(false);
+            ArrayList<Ristorante> allRestaurants = loadRestTask.getValue();
+
+            TreeItem<Object> selectedItem = reviewsTreeView.getSelectionModel().getSelectedItem();
+            if (selectedItem == null || !(selectedItem.getValue() instanceof Recensione)) {
+                mainApp.showError("Seleziona una recensione da modificare.");
+                return;
+            }
+            Recensione selectedReview = (Recensione) selectedItem.getValue();
+            ReviewDialog dialog = new ReviewDialog(allRestaurants, selectedReview);
+            Optional<Recensione> result = dialog.showAndWait();
+            result.ifPresent(editedReview -> {
+                editedReview.fkIdUtente = currentUser.getIdUtente();
+                editedReview.idRecensione = selectedReview.idRecensione;
+                Task<Boolean> updateTask = new Task<>() {
+                    @Override
+                    protected Boolean call() {
+                        return currentUser.modificaRecensione(selectedReview.idRecensione, editedReview);
                     }
-                } else {
-                    mainApp.showError("Errore durante la modifica.");
-                }
+                };
+                updateTask.setOnSucceeded(ev -> {
+                    if (updateTask.getValue()) {
+                        mainApp.showTemporaryInfo("Recensione modificata.");
+                        int index = userReviews.indexOf(selectedReview);
+                        if (index != -1) {
+                            userReviews.set(index, editedReview);
+                            buildReviewTree();
+                        }
+                    } else {
+                        mainApp.showError("Errore durante la modifica.");
+                    }
+                });
+                new Thread(updateTask).start();
             });
-            new Thread(updateTask).start();
         });
+
+        loadRestTask.setOnFailed(e -> {
+            loadingIndicator.setVisible(false);
+            mainApp.showError("Errore nel caricamento dei ristoranti dal server.");
+        });
+
+        Thread t = new Thread(loadRestTask);
+        t.start();
     }
 
     /**
      * Gestisce l'azione del pulsante per aggiungere una nuova recensione.
-     * <p>
-     * Apre il {@link ReviewDialog} in modalità "aggiunta".
-     * </p>
      */
     private void showAddReviewDialog() {
-        ArrayList<Ristorante> allRestaurants = Gestione.Deserializer.fromJsonFile("data/ristoranti.json", Ristorante.class, new Ristorante.RistoranteDeserializer());
-        if (allRestaurants == null || allRestaurants.isEmpty()) {
-            mainApp.showError("Nessun ristorante disponibile da recensire.");
-            return;
-        }
-        ReviewDialog dialog = new ReviewDialog(allRestaurants, null);
-        Optional<Recensione> result = dialog.showAndWait();
-        result.ifPresent(newReview -> {
-            newReview.fkIdUtente = currentUser.getIdUtente();
-            Task<Boolean> saveTask = new Task<>() {
-                @Override
-                protected Boolean call() {
-                    return currentUser.aggiungiRecensione(newReview);
-                }
-            };
-            saveTask.setOnSucceeded(e -> {
-                if (saveTask.getValue()) {
-                    mainApp.showTemporaryInfo("Recensione aggiunta!");
-                    userReviews.add(newReview);
-                    buildReviewTree();
-                } else {
-                    mainApp.showError("Errore nel salvataggio.");
-                }
+        loadingIndicator.setVisible(true);
+        Task<ArrayList<Ristorante>> loadRestTask = new Task<>() {
+            @Override
+            protected ArrayList<Ristorante> call() throws Exception {
+                TheKnifeService service = RmiClientManager.getInstance().getService();
+                if (service == null) throw new Exception("Servizio RMI non disponibile.");
+                return service.getAllRistoranti();
+            }
+        };
+
+        loadRestTask.setOnSucceeded(e -> {
+            loadingIndicator.setVisible(false);
+            ArrayList<Ristorante> allRestaurants = loadRestTask.getValue();
+            if (allRestaurants == null || allRestaurants.isEmpty()) {
+                mainApp.showError("Nessun ristorante disponibile da recensire.");
+                return;
+            }
+            ReviewDialog dialog = new ReviewDialog(allRestaurants, null);
+            Optional<Recensione> result = dialog.showAndWait();
+            result.ifPresent(newReview -> {
+                newReview.fkIdUtente = currentUser.getIdUtente();
+                Task<Boolean> saveTask = new Task<>() {
+                    @Override
+                    protected Boolean call() {
+                        return currentUser.aggiungiRecensione(newReview);
+                    }
+                };
+                saveTask.setOnSucceeded(ev -> {
+                    if (saveTask.getValue()) {
+                        mainApp.showTemporaryInfo("Recensione aggiunta!");
+                        userReviews.add(newReview);
+                        buildReviewTree();
+                    } else {
+                        mainApp.showError("Errore nel salvataggio.");
+                    }
+                });
+                saveTask.setOnFailed(ev -> mainApp.showError("Errore critico: " + saveTask.getException().getMessage()));
+                new Thread(saveTask).start();
             });
-            saveTask.setOnFailed(e -> mainApp.showError("Errore critico: " + saveTask.getException().getMessage()));
-            new Thread(saveTask).start();
         });
+
+        loadRestTask.setOnFailed(e -> {
+            loadingIndicator.setVisible(false);
+            mainApp.showError("Errore nel caricamento dei ristoranti dal server.");
+        });
+
+        Thread t = new Thread(loadRestTask);
+        t.start();
     }
 
     /**
