@@ -5,26 +5,35 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConnection {
-    private static final String URL = "jdbc:postgresql://localhost:5432/theknife";
-    private static final String USER = "postgres";
-    private static final String PASSWORD = "postgres"; // Metti la pass dell'installazione!
+    private static String host = "localhost";
+    private static int port = 5432;
+    private static String dbName = "theknife";
+    private static String user = "postgres";
+    private static String password = "postgres";
 
-    private static Connection connection = null;
+    public static void configure(String dbHost, int dbPort, String database, String dbUser, String dbPass) {
+        host = dbHost;
+        port = dbPort;
+        dbName = database;
+        user = dbUser;
+        password = dbPass;
+    }
 
-    // Metodo per ottenere la connessione
-    public static Connection getInstance() throws SQLException {
-        // Se la connessione non c'è ancora o è chiusa, la creiamo
-        if (connection == null || connection.isClosed()) {
-            try {
-                Class.forName("org.postgresql.Driver");
-                // Apre effettivamente la connessione
-                connection = DriverManager.getConnection(URL, USER, PASSWORD);
-                System.out.println("Connessione al DB riuscita!");
-            } catch (ClassNotFoundException e) {
-                System.out.println("Errore: Driver JDBC non trovato. Hai aggiunto il .jar al progetto?");
-                e.printStackTrace();
-            }
+    public static boolean testConnection() {
+        try (Connection conn = getConnection()) {
+            return conn != null && !conn.isClosed();
+        } catch (SQLException e) {
+            return false;
         }
-        return connection;
+    }
+
+    public static Connection getConnection() throws SQLException {
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("Driver PostgreSQL non trovato nel classpath.", e);
+        }
+        String url = String.format("jdbc:postgresql://%s:%d/%s", host, port, dbName);
+        return DriverManager.getConnection(url, user, password);
     }
 }

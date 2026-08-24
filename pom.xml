@@ -9,29 +9,29 @@
     <version>1.0</version>
 
     <properties>
-        <!-- Imposto Java 21 come base sicura per tutti -->
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>21.0.2</javafx.version>
     </properties>
 
     <dependencies>
-        <!-- Libreria Gson per leggere i vecchi file JSON che si può rimuovere alla fine -->
+        <!-- Libreria Gson per retrocompatibilità/utility -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.10.1</version>
         </dependency>
 
-        <!-- Driver JDBC per PostgreSQL (Serve a Melis) -->
+        <!-- Driver JDBC per PostgreSQL -->
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
             <version>42.7.2</version>
         </dependency>
 
-        <!-- Librerie JavaFX (Così possiamo rimuovere la cartella lib ma per ora teniamola) -->
+        <!-- Librerie JavaFX -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -46,18 +46,17 @@
 
     <build>
         <plugins>
-            <!-- Plugin base per compilare -->
+            <!-- Plugin per la compilazione con release 21 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.11.0</version>
                 <configuration>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
+                    <release>${maven.compiler.release}</release>
                 </configuration>
             </plugin>
 
-            <!-- Plugin per far partire l'app facilmente -->
+            <!-- Plugin per eseguire il CLIENT (JavaFX) via Maven -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
@@ -66,25 +65,36 @@
                     <execution>
                         <id>default-cli</id>
                         <configuration>
-                            <mainClass>theknife.MainApp</mainClass>
+                            <mainClass>theknife.TheKnife</mainClass>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
 
-            <!-- Plugin per generare la JavaDoc automatica -->
+            <!-- Plugin per eseguire il SERVER via Maven -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <mainClass>theknife.server.ServerTK</mainClass>
+                </configuration>
+            </plugin>
+
+            <!-- Plugin per generare la JavaDoc -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.6.3</version>
             </plugin>
 
-            <!-- Plugin per creare il JAR del CLIENT -->
+            <!-- Plugin per generare i JAR separati (ClientTK.jar e ServerTK.jar) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.5.2</version>
                 <executions>
+                    <!-- JAR del CLIENT -->
                     <execution>
                         <id>client-jar</id>
                         <phase>package</phase>
@@ -95,13 +105,12 @@
                             <outputFile>${project.build.directory}/ClientTK.jar</outputFile>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <!-- ATTENZIONE: Questo è il percorso della TUA classe main della grafica -->
-                                    <mainClass>theknife.MainApp</mainClass>
+                                    <mainClass>theknife.TheKnife</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
                     </execution>
-                    <!-- Plugin per creare il JAR del SERVER -->
+                    <!-- JAR del SERVER -->
                     <execution>
                         <id>server-jar</id>
                         <phase>package</phase>
@@ -112,8 +121,7 @@
                             <outputFile>${project.build.directory}/ServerTK.jar</outputFile>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <!-- ATTENZIONE: Da aggiornare quando Rede/Melnyk creeranno la classe Main del Server -->
-                                    <mainClass>theknife.MainTestDB</mainClass>
+                                    <mainClass>theknife.server.ServerTK</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>

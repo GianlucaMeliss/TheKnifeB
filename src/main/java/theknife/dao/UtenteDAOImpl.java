@@ -11,7 +11,7 @@ public class UtenteDAOImpl implements UtenteDAO {
     public Utente eseguiLogin(String username, String passwordCifrata) {
         String sql = "SELECT * FROM Utenti WHERE username = ? AND password = ?";
 
-        try (Connection conn = DatabaseConnection.getInstance();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             stmt.setString(1, username);
@@ -45,7 +45,7 @@ public class UtenteDAOImpl implements UtenteDAO {
     public boolean registraUtente(Utente utente) {
         String sql = "INSERT INTO Utenti (nome, cognome, username, password, data_nascita, domicilio, ruolo) VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        try (Connection conn = DatabaseConnection.getInstance();
+        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
             // Usiamo i GETTER invece di accedere direttamente alle variabili!

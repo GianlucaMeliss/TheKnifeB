@@ -15,7 +15,7 @@ public class MainTestDB {
         // TEST 1: Verifica della Connessione
         System.out.println("\n1. Test Connessione...");
         try {
-            Connection conn = DatabaseConnection.getInstance();
+            Connection conn = DatabaseConnection.getConnection();
             if (conn != null && !conn.isClosed()) {
                 System.out.println("✅ SUCCESSO: Connesso a PostgreSQL!");
             }
