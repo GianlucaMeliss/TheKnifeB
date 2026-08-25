@@ -32,12 +32,32 @@ public class RecensioneDAOImpl implements RecensioneDAO {
 
     @Override
     public boolean aggiungiRecensione(Recensione r) {
+        int idPadre = (r.idRecensionePadre != null) ? r.idRecensionePadre : -1;
+
+        // Se è una risposta, verifichiamo atomicamente che non ne esista già un'altra
+        if (idPadre != -1) {
+            String checkSql = "SELECT COUNT(*) FROM Recensioni WHERE id_padre = ?";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
+                checkPs.setInt(1, idPadre);
+                try (ResultSet rs = checkPs.executeQuery()) {
+                    if (rs.next() && rs.getInt(1) > 0) {
+                        System.err.println("Violazione vincolo: esiste già una risposta per la recensione " + idPadre);
+                        return false;
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
         String sql = "INSERT INTO Recensioni (id_ristorante, id_utente, id_padre, voto, commento, data_recensione) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, r.fkIdRistorante);
             ps.setInt(2, r.fkIdUtente);
-            ps.setInt(3, r.idRecensionePadre != null ? r.idRecensionePadre : -1);
+            ps.setInt(3, idPadre);
             ps.setInt(4, r.voto);
             ps.setString(5, r.commento);
             ps.setDate(6, r.data != null ? Date.valueOf(r.data) : Date.valueOf(java.time.LocalDate.now()));
@@ -66,7 +86,6 @@ public class RecensioneDAOImpl implements RecensioneDAO {
 
     @Override
     public boolean eliminaRecensione(int idRecensione) {
-        // Elimina ricorsivamente risposte e recensione
         String sqlReplies = "DELETE FROM Recensioni WHERE id_padre = ?";
         String sqlMain = "DELETE FROM Recensioni WHERE id_recensione = ?";
         try (Connection conn = DatabaseConnection.getConnection()) {
@@ -124,7 +143,7 @@ public class RecensioneDAOImpl implements RecensioneDAO {
     public ArrayList<Recensione> getRecensioniByUtente(int idUtente) {
         ArrayList<Recensione> list = new ArrayList<>();
         String sql = "SELECT rec.*, r.nome AS rest_nome FROM Recensioni rec " +
-                "LEFT JOIN Ristoranti r ON rec.id_ristorante = r.id_ristorante " +
+                "LEFT JOIN RistorantiTheKnife r ON rec.id_ristorante = r.id_ristorante " +
                 "WHERE rec.id_utente = ? AND rec.id_padre = -1 ORDER BY rec.data_recensione DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

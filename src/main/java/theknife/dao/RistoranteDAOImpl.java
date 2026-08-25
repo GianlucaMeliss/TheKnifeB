@@ -19,9 +19,28 @@
  * Matricola:760043
  * Sede: VA
  */
-
+/*
+ * Nome: Alessandro
+ * Cognome: Melnyk
+ * Matricola:761001
+ * Sede: VA
+ *
+ * Nome: Gianluca
+ * Cognome: Melis
+ * Matricola:761289
+ * Sede: VA
+ *
+ * Nome: Simone
+ * Cognome: Zamberletti
+ * Matricola:761355
+ * Sede: VA
+ *
+ * Nome: Davide
+ * Cognome: Redemagni
+ * Matricola:760043
+ * Sede: VA
+ */
 package theknife.dao;
-
 
 import theknife.Ristorante;
 import theknife.TipoCucina;
@@ -29,7 +48,6 @@ import theknife.db.DatabaseConnection;
 
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.stream.Collectors;
 
 public class RistoranteDAOImpl implements RistoranteDAO {
@@ -40,6 +58,8 @@ public class RistoranteDAOImpl implements RistoranteDAO {
         String indirizzo = rs.getString("indirizzo");
         String citta = rs.getString("citta");
         String nazione = rs.getString("nazione");
+        double lat = rs.getDouble("latitudine");
+        double lon = rs.getDouble("longitudine");
         float prezzo = rs.getFloat("prezzo_medio");
         boolean delivery = rs.getBoolean("delivery");
         boolean online = rs.getBoolean("prenotazione_online");
@@ -53,7 +73,7 @@ public class RistoranteDAOImpl implements RistoranteDAO {
             }
         }
 
-        Ristorante r = new Ristorante(nome, indirizzo, citta, nazione, prezzo, cucine);
+        Ristorante r = new Ristorante(nome, indirizzo, citta, nazione, lat, lon, prezzo, cucine);
         r.idRistorante = id;
         r.consegna = delivery;
         r.pren_online = online;
@@ -63,7 +83,7 @@ public class RistoranteDAOImpl implements RistoranteDAO {
     @Override
     public ArrayList<Ristorante> getAllRistoranti() {
         ArrayList<Ristorante> list = new ArrayList<>();
-        String sql = "SELECT * FROM Ristoranti";
+        String sql = "SELECT * FROM RistorantiTheKnife ORDER BY nome ASC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -76,7 +96,7 @@ public class RistoranteDAOImpl implements RistoranteDAO {
 
     @Override
     public Ristorante getRistoranteById(int id) {
-        String sql = "SELECT * FROM Ristoranti WHERE id_ristorante = ?";
+        String sql = "SELECT * FROM RistorantiTheKnife WHERE id_ristorante = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, id);
@@ -93,8 +113,7 @@ public class RistoranteDAOImpl implements RistoranteDAO {
     public ArrayList<Ristorante> cercaAvanzata(String citta, String nome, String tipoCucina, Float pMin, Float pMax, boolean delivery, boolean online, Double ratingMin) {
         ArrayList<Ristorante> list = new ArrayList<>();
         StringBuilder sql = new StringBuilder(
-                "SELECT r.*, COALESCE(AVG(rec.voto), 0) AS media_voto " +
-                        "FROM Ristoranti r " +
+                "SELECT r.* FROM RistorantiTheKnife r " +
                         "LEFT JOIN Recensioni rec ON r.id_ristorante = rec.id_ristorante AND rec.id_padre = -1 " +
                         "WHERE 1=1 "
         );
@@ -133,20 +152,22 @@ public class RistoranteDAOImpl implements RistoranteDAO {
 
     @Override
     public boolean aggiungiRistorante(Ristorante r, int idRistoratore) {
-        String sql = "INSERT INTO Ristoranti (nome, indirizzo, citta, nazione, prezzo_medio, delivery, prenotazione_online, tipo_cucina, id_ristoratore) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO RistorantiTheKnife (nome, indirizzo, citta, nazione, latitudine, longitudine, prezzo_medio, delivery, prenotazione_online, tipo_cucina, id_ristoratore) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, r.nome);
             ps.setString(2, r.indirizzo);
             ps.setString(3, r.citta);
             ps.setString(4, r.nazione);
-            ps.setFloat(5, r.prezzo);
-            ps.setBoolean(6, r.consegna);
-            ps.setBoolean(7, r.pren_online);
+            ps.setDouble(5, r.latitudine != null ? r.latitudine : 0.0);
+            ps.setDouble(6, r.longitudine != null ? r.longitudine : 0.0);
+            ps.setFloat(7, r.prezzo);
+            ps.setBoolean(8, r.consegna);
+            ps.setBoolean(9, r.pren_online);
             String cucineStr = r.tipoCucina.stream().map(Enum::name).collect(Collectors.joining(","));
-            ps.setString(8, cucineStr);
-            ps.setInt(9, idRistoratore);
+            ps.setString(10, cucineStr);
+            ps.setInt(11, idRistoratore);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -157,7 +178,7 @@ public class RistoranteDAOImpl implements RistoranteDAO {
     @Override
     public ArrayList<Ristorante> getRistorantiGestiti(int idRistoratore) {
         ArrayList<Ristorante> list = new ArrayList<>();
-        String sql = "SELECT * FROM Ristoranti WHERE id_ristoratore = ?";
+        String sql = "SELECT * FROM RistorantiTheKnife WHERE id_ristoratore = ? ORDER BY id_ristorante ASC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idRistoratore);
@@ -201,7 +222,7 @@ public class RistoranteDAOImpl implements RistoranteDAO {
     @Override
     public ArrayList<Ristorante> getPreferitiUtente(int idUtente) {
         ArrayList<Ristorante> list = new ArrayList<>();
-        String sql = "SELECT r.* FROM Ristoranti r INNER JOIN Preferiti p ON r.id_ristorante = p.id_ristorante WHERE p.id_utente = ?";
+        String sql = "SELECT r.* FROM RistorantiTheKnife r INNER JOIN Preferiti p ON r.id_ristorante = p.id_ristorante WHERE p.id_utente = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idUtente);

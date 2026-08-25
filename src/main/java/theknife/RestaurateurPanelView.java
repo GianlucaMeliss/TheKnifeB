@@ -291,9 +291,10 @@ import javafx.collections.FXCollections;
             return view;
         }
         private static class AddRestaurantDialog extends Dialog<Ristorante> {
-            private TextField nameField, addressField, cityField, nationField, priceField;
+            private TextField nameField, addressField, cityField, nationField, priceField, latField, lonField;
             private CheckBox deliveryCheck, reservationCheck;
             private ListView<TipoCucina> cuisineList;
+
             public AddRestaurantDialog() {
                 setTitle("Aggiungi Nuovo Ristorante");
                 setHeaderText("Compila i campi per registrare il tuo ristorante.");
@@ -305,16 +306,21 @@ import javafx.collections.FXCollections;
                 nameField.textProperty().addListener((obs, oldV, newV) -> validate(okButton));
                 priceField.textProperty().addListener((obs, oldV, newV) -> validate(okButton));
                 cuisineList.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> validate(okButton));
+
                 setResultConverter(button -> {
                     if (button == ButtonType.OK) {
                         try {
                             float price = Float.parseFloat(priceField.getText().trim().replace(',', '.'));
+                            double lat = latField.getText().isBlank() ? 0.0 : Double.parseDouble(latField.getText().trim().replace(',', '.'));
+                            double lon = lonField.getText().isBlank() ? 0.0 : Double.parseDouble(lonField.getText().trim().replace(',', '.'));
                             ArrayList<TipoCucina> selectedCuisines = new ArrayList<>(cuisineList.getSelectionModel().getSelectedItems());
                             Ristorante newRest = new Ristorante(
                                     nameField.getText().trim(),
                                     addressField.getText().trim(),
                                     cityField.getText().trim(),
                                     nationField.getText().trim(),
+                                    lat,
+                                    lon,
                                     price,
                                     selectedCuisines
                             );
@@ -328,6 +334,7 @@ import javafx.collections.FXCollections;
                     return null;
                 });
             }
+
             private void validate(Node okButton) {
                 boolean isPriceValid;
                 try {
@@ -341,6 +348,7 @@ import javafx.collections.FXCollections;
                         !cuisineList.getSelectionModel().getSelectedItems().isEmpty();
                 okButton.setDisable(!allValid);
             }
+
             private GridPane createGrid() {
                 GridPane grid = new GridPane();
                 grid.setVgap(10); grid.setHgap(10); grid.setPadding(new Insets(20));
@@ -348,19 +356,24 @@ import javafx.collections.FXCollections;
                 addressField = new TextField(); addressField.setPromptText("Es. Via Roma 1");
                 cityField = new TextField(); cityField.setPromptText("Es. Como");
                 nationField = new TextField(); nationField.setPromptText("Es. Italia");
+                latField = new TextField(); latField.setPromptText("Es. 45.81");
+                lonField = new TextField(); lonField.setPromptText("Es. 9.08");
                 priceField = new TextField(); priceField.setPromptText("Es. 35.50");
                 deliveryCheck = new CheckBox("Offre Delivery");
                 reservationCheck = new CheckBox("Offre Prenotazione Online");
                 cuisineList = new ListView<>(FXCollections.observableArrayList(TipoCucina.values()));
                 cuisineList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
                 cuisineList.setPrefHeight(100);
+
                 grid.add(new Label("Nome*:"), 0, 0); grid.add(nameField, 1, 0);
                 grid.add(new Label("Indirizzo*:"), 0, 1); grid.add(addressField, 1, 1);
                 grid.add(new Label("Città*:"), 0, 2); grid.add(cityField, 1, 2);
                 grid.add(new Label("Nazione*:"), 0, 3); grid.add(nationField, 1, 3);
-                grid.add(new Label("Prezzo Medio (€)*:"), 0, 4); grid.add(priceField, 1, 4);
-                grid.add(new Label("Tipologie Cucina*:"), 0, 5); grid.add(cuisineList, 1, 5);
-                grid.add(new Label("Servizi:"), 0, 6); grid.add(new HBox(15, deliveryCheck, reservationCheck), 1, 6);
+                grid.add(new Label("Latitudine:"), 0, 4); grid.add(latField, 1, 4);
+                grid.add(new Label("Longitudine:"), 0, 5); grid.add(lonField, 1, 5);
+                grid.add(new Label("Prezzo Medio (€)*:"), 0, 6); grid.add(priceField, 1, 6);
+                grid.add(new Label("Tipologie Cucina*:"), 0, 7); grid.add(cuisineList, 1, 7);
+                grid.add(new Label("Servizi:"), 0, 8); grid.add(new HBox(15, deliveryCheck, reservationCheck), 1, 8);
                 return grid;
             }
         }
