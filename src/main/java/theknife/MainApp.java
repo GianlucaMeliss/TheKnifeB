@@ -206,6 +206,13 @@ public class MainApp extends Application {
         ensureGuestSearchViewExists();
         sharedGuestSearchView.resetView();
 
+        // --- INIZIO NUOVA AGGIUNTA ---
+        // Prende il domicilio dall'utente appena loggato e fa partire in automatico la ricerca
+        if (user != null && user.getDomicilio() != null) {
+            sharedGuestSearchView.setLocation(user.getDomicilio());
+        }
+        // --- FINE NUOVA AGGIUNTA ---
+
         if (user.ruolo == Ruolo.CLIENTE) {
             showLoggedInClientView();
         } else if (user.ruolo == Ruolo.RISTORATORE) {

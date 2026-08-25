@@ -313,7 +313,10 @@ public class GuestSearchView {
      * @param location La stringa della località da impostare.
      */
     public void setLocation(String location) {
-        locationField.setText(location);
+        if (location != null && !location.trim().isEmpty()) {
+            locationField.setText(location);
+            performSearch();
+        }
     }
 
     /**
