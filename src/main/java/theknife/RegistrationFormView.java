@@ -125,6 +125,14 @@ public class RegistrationFormView {
      * il nuovo utente nel file JSON.
      * </p>
      */
+    /**
+     * Gestisce l'evento di click sul pulsante "Registrati".
+     * <p>
+     * Esegue la validazione dei dati inseriti e, se validi, avvia un {@code Task}
+     * in background che delega alla logica del backend il compito di creare e salvare
+     * il nuovo utente nel file JSON.
+     * </p>
+     */
     private void handleRegister() {
         // Validazione preliminare per campi vuoti
         if (nameField.getText().trim().isEmpty() || surnameField.getText().trim().isEmpty() ||
@@ -167,6 +175,7 @@ public class RegistrationFormView {
             boolean success = registrationTask.getValue();
             if(success) {
                 mainApp.showInfo("Registrazione completata con successo! Ora puoi effettuare il login.");
+                svuotaCampi(); // <--- AGGIUNTO QUI: Pulisce il form dopo il successo
                 mainApp.showLoginView();
             } else {
                 mainApp.showError("Registrazione fallita. L'username potrebbe essere già in uso. Riprova.");
@@ -190,4 +199,18 @@ public class RegistrationFormView {
      * @return Il {@code BorderPane} che contiene l'intera interfaccia di questa vista.
      */
     public BorderPane getView() { return view; }
+    /**
+     * Svuota tutti i campi del form e ripristina il bottone.
+     */
+    public void svuotaCampi() {
+        nameField.clear();
+        surnameField.clear();
+        usernameField.clear();
+        passwordField.clear();
+        locationField.clear();
+        birthDatePicker.setValue(null);
+        roleCombo.getSelectionModel().selectFirst();
+        btnRegister.setDisable(false);
+        btnRegister.setText("Registrati");
+    }
 }
