@@ -58,11 +58,11 @@ public class TheKnifeServiceImpl extends UnicastRemoteObject implements TheKnife
     }
 
     @Override
-    public ArrayList<Ristorante> cercaRistorantiAvanzata(String citta, String nome, String tipoCucina,
+    public ArrayList<Ristorante> cercaRistorantiAvanzata(String citta, Double lat, Double lon, String nome, String tipoCucina,
                                                          Float prezzoMin, Float prezzoMax,
                                                          boolean delivery, boolean online,
                                                          Double ratingMin) throws RemoteException {
-        return ristoranteDAO.cercaAvanzata(citta, nome, tipoCucina, prezzoMin, prezzoMax, delivery, online, ratingMin);
+        return ristoranteDAO.cercaAvanzata(citta, lat, lon, nome, tipoCucina, prezzoMin, prezzoMax, delivery, online, ratingMin);
     }
 
     @Override

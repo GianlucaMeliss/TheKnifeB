@@ -41,7 +41,7 @@ public interface TheKnifeService extends Remote {
      * Ricerca avanzata di ristoranti tramite filtri multipli eseguita sul server.
      */
     ArrayList<Ristorante> cercaRistorantiAvanzata(
-            String citta, String nome, String tipoCucina,
+            String citta, Double lat, Double lon, String nome, String tipoCucina,
             Float prezzoMin, Float prezzoMax,
             boolean delivery, boolean online,
             Double ratingMin

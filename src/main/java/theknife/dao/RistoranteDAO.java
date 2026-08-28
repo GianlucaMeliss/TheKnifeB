@@ -29,7 +29,7 @@ import java.util.ArrayList;
 public interface RistoranteDAO {
     ArrayList<Ristorante> getAllRistoranti();
     Ristorante getRistoranteById(int id);
-    ArrayList<Ristorante> cercaAvanzata(String citta, String nome, String tipoCucina, Float pMin, Float pMax, boolean delivery, boolean online, Double ratingMin);
+    ArrayList<Ristorante> cercaAvanzata(String citta, Double lat, Double lon, String nome, String tipoCucina, Float pMin, Float pMax, boolean delivery, boolean online, Double ratingMin);
     boolean aggiungiRistorante(Ristorante r, int idRistoratore);
     ArrayList<Ristorante> getRistorantiGestiti(int idRistoratore);
     boolean aggiungiPreferito(int idUtente, int idRistorante);

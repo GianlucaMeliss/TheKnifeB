@@ -47,18 +47,26 @@ import java.util.stream.Collectors;
  * </p>
  * @author Simone Zamberletti
  */
+
 public class GuestSearchView {
     private final MainApp mainApp;
     private final BorderPane view;
     private ListView<Ristorante> restaurantList;
     private ComboBox<String> cuisineTypeCombo;
     private TextField locationField;
+
+    // NUOVI CAMPI PER LE COORDINATE
+    private TextField latField;
+    private TextField lonField;
+
     private TextField minPriceField;
     private TextField maxPriceField;
     private CheckBox deliveryCheck;
     private CheckBox reservationCheck;
     private Slider ratingSlider;
     private ProgressIndicator loadingIndicator;
+
+    private final Map<Integer, double[]> statsCache = new HashMap<>();
 
     /**
      * Costruttore della vista di ricerca.
@@ -88,6 +96,7 @@ public class GuestSearchView {
         restaurantList.setPrefWidth(600);
 
         // Applica una visualizzazione personalizzata per ogni elemento della lista
+        // Applica una visualizzazione personalizzata per ogni elemento della lista
         restaurantList.setCellFactory(param -> new ListCell<Ristorante>() {
             private VBox content = new VBox(5);
             private Label nameLabel = new Label();
@@ -111,19 +120,33 @@ public class GuestSearchView {
                     String cuisine = item.tipoCucina.toString().replace("[", "").replace("]", "");
                     detailsLabel.setText(cuisine);
 
-                    try {
-                        TheKnifeService service = RmiClientManager.getInstance().getService();
-                        if (service != null) {
-                            double[] stats = service.getStatisticheRistorante(item.idRistorante);
-                            double avgRating = stats[0];
-                            long reviewCount = (long) stats[1];
-                            DecimalFormat df = new DecimalFormat("#.0");
-                            ratingLabel.setText("Valutazione: " + df.format(avgRating) + "/5 (" + reviewCount + " recensioni)");
-                        } else {
-                            ratingLabel.setText("Valutazione: N/D");
-                        }
-                    } catch (Exception e) {
-                        ratingLabel.setText("Valutazione: Errore");
+                    // Imposta un testo temporaneo per non far laggare la grafica
+                    ratingLabel.setText("Valutazione: Caricamento...");
+
+                    // LOGICA ANTI-LAG: Uso la Cache o un Thread in background
+                    if (statsCache.containsKey(item.idRistorante)) {
+                        aggiornaLabelValutazione(statsCache.get(item.idRistorante));
+                    } else {
+                        // Se non c'è in cache, scarica senza bloccare la grafica
+                        new Thread(() -> {
+                            try {
+                                TheKnifeService service = RmiClientManager.getInstance().getService();
+                                if (service != null) {
+                                    double[] stats = service.getStatisticheRistorante(item.idRistorante);
+                                    statsCache.put(item.idRistorante, stats); // Salva in cache
+
+                                    // Aggiorna la grafica in modo sicuro
+                                    Platform.runLater(() -> {
+                                        // Controlla che l'utente non abbia scrollato via troppo velocemente
+                                        if (getItem() != null && getItem().idRistorante == item.idRistorante) {
+                                            aggiornaLabelValutazione(stats);
+                                        }
+                                    });
+                                }
+                            } catch (Exception e) {
+                                Platform.runLater(() -> ratingLabel.setText("Valutazione: N/D"));
+                            }
+                        }).start();
                     }
 
                     String price = String.format("Prezzo Medio: %.2f€", item.prezzo);
@@ -133,6 +156,14 @@ public class GuestSearchView {
 
                     setGraphic(content);
                 }
+            }
+
+            // Metodo di supporto per formattare la label
+            private void aggiornaLabelValutazione(double[] stats) {
+                double avgRating = stats[0];
+                long reviewCount = (long) stats[1];
+                DecimalFormat df = new DecimalFormat("#.0");
+                ratingLabel.setText("Valutazione: " + df.format(avgRating) + "/5 (" + reviewCount + " recensioni)");
             }
         });
 
@@ -161,7 +192,9 @@ public class GuestSearchView {
      * </p>
      */
     public void resetView() {
-        locationField.clear(); minPriceField.clear(); maxPriceField.clear();
+        statsCache.clear();
+        locationField.clear(); latField.clear(); lonField.clear();
+        minPriceField.clear(); maxPriceField.clear();
         cuisineTypeCombo.getSelectionModel().selectFirst();
         deliveryCheck.setSelected(false); reservationCheck.setSelected(false);
         ratingSlider.setValue(0);
@@ -185,8 +218,18 @@ public class GuestSearchView {
                 .sorted()
                 .forEach(cuisineTypeCombo.getItems()::add);
         cuisineTypeCombo.getSelectionModel().selectFirst();
+
         locationField = new TextField();
         locationField.setPromptText("Inserisci località");
+
+        // --- AGGIUNTA CAMPI COORDINATE ---
+        Label coordsLabel = new Label("Oppure ricerca per Coordinate:");
+        latField = new TextField();
+        latField.setPromptText("Lat (es. 45.46)");
+        lonField = new TextField();
+        lonField.setPromptText("Lon (es. 9.19)");
+        HBox coordsBox = new HBox(10, latField, lonField);
+
         Label priceLabel = new Label("Prezzo (€):");
         minPriceField = new TextField();
         minPriceField.setPromptText("Min");
@@ -207,9 +250,12 @@ public class GuestSearchView {
         searchButton.setMaxWidth(Double.MAX_VALUE);
         searchButton.getStyleClass().add("button-primary");
         searchButton.setOnAction(e -> performSearch());
+
+        // Aggiunti coordsLabel e coordsBox nell'elenco
         filtersBox.getChildren().addAll(
                 new Label("Tipologia di cucina:"), cuisineTypeCombo,
-                new Label("Località (obbligatoria):"), locationField,
+                new Label("Località:"), locationField,
+                coordsLabel, coordsBox,
                 priceLabel, priceBox,
                 deliveryCheck, reservationCheck,
                 ratingLabel, ratingSlider,
@@ -241,15 +287,42 @@ public class GuestSearchView {
      * </p>
      */
     private void performSearch() {
-        String location = locationField.getText().trim();
-        if (location.isEmpty()) {
-            mainApp.showError("Il campo Località è obbligatorio.");
+        String locationText = locationField.getText().trim();
+        String latStr = latField.getText().trim();
+        String lonStr = lonField.getText().trim();
+
+        boolean hasLocation = !locationText.isEmpty();
+        boolean hasCoords = !latStr.isEmpty() && !lonStr.isEmpty();
+
+        // Validazione: deve esserci o la città o le coordinate
+        if (!hasLocation && !hasCoords) {
+            mainApp.showError("Devi inserire una Località oppure Latitudine e Longitudine.");
             return;
         }
+
+        final Double[] coords = new Double[2]; // [0] = lat, [1] = lon
+        final String[] finalLocation = new String[1];
+
+        // Se usa le coordinate, annulliamo la località in modo che il server usi la Formula di Haversine
+        if (hasCoords) {
+            try {
+                coords[0] = Double.parseDouble(latStr.replace(',', '.'));
+                coords[1] = Double.parseDouble(lonStr.replace(',', '.'));
+                finalLocation[0] = null;
+            } catch (NumberFormatException e) {
+                mainApp.showError("Coordinate non valide. Usa numeri (es. 45.81).");
+                return;
+            }
+        } else {
+            finalLocation[0] = locationText;
+            coords[0] = null;
+            coords[1] = null;
+        }
+
         loadingIndicator.setVisible(true);
         restaurantList.setItems(FXCollections.emptyObservableList());
         restaurantList.setPlaceholder(new Label("Ricerca in corso..."));
-        
+
         Task<ObservableList<Ristorante>> searchTask = new Task<>() {
             @Override
             protected ObservableList<Ristorante> call() throws Exception {
@@ -257,21 +330,22 @@ public class GuestSearchView {
                 if (service == null) throw new Exception("Servizio RMI non disponibile.");
 
                 String tipoCucinaSelezionato = cuisineTypeCombo.getValue();
-                String enumStyleCuisine = (tipoCucinaSelezionato != null && !tipoCucinaSelezionato.equals("Qualsiasi")) 
+                String enumStyleCuisine = (tipoCucinaSelezionato != null && !tipoCucinaSelezionato.equals("Qualsiasi"))
                         ? tipoCucinaSelezionato.toUpperCase().replace(" ", "_") : null;
-                
+
                 Float minPrice = parsePrice(minPriceField.getText(), null);
                 Float maxPrice = parsePrice(maxPriceField.getText(), null);
                 double minRating = ratingSlider.getValue();
-                
+
+                // Chiamata RMI aggiornata con finalLocation[0], coords[0], coords[1]
                 ArrayList<Ristorante> risultati = service.cercaRistorantiAvanzata(
-                    location, null, enumStyleCuisine, 
-                    minPrice, maxPrice, 
-                    deliveryCheck.isSelected(), 
-                    reservationCheck.isSelected(),
-                    minRating > 0 ? minRating : null
+                        finalLocation[0], coords[0], coords[1], null, enumStyleCuisine,
+                        minPrice, maxPrice,
+                        deliveryCheck.isSelected(),
+                        reservationCheck.isSelected(),
+                        minRating > 0 ? minRating : null
                 );
-                
+
                 return FXCollections.observableArrayList(risultati);
             }
         };
