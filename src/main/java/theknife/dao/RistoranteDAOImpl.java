@@ -100,7 +100,7 @@ public class RistoranteDAOImpl implements RistoranteDAO {
 
         StringBuilder sql = new StringBuilder(
                 "SELECT r.* FROM ristorantitheknife r " +
-                        "LEFT JOIN recensioni rec ON r.id_ristorante = rec.fk_id_ristorante AND rec.id_recensione_padre = -1 " +
+                        "LEFT JOIN recensioni rec ON r.id_ristorante = rec.fk_id_ristorante AND rec.id_recensione_padre IS NULL " +
                         "WHERE 1=1 "
         );
 
@@ -235,7 +235,7 @@ public class RistoranteDAOImpl implements RistoranteDAO {
 
     @Override
     public boolean aggiungiPreferito(int idUtente, int idRistorante) {
-        String sql = "INSERT INTO preferiti (id_utente, id_ristorante) VALUES (?, ?) ON CONFLICT DO NOTHING";
+        String sql = "INSERT INTO preferiti (fk_id_utente, fk_id_ristorante) VALUES (?, ?) ON CONFLICT DO NOTHING";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idUtente);
@@ -249,7 +249,7 @@ public class RistoranteDAOImpl implements RistoranteDAO {
 
     @Override
     public boolean rimuoviPreferito(int idUtente, int idRistorante) {
-        String sql = "DELETE FROM preferiti WHERE id_utente = ? AND id_ristorante = ?";
+        String sql = "DELETE FROM preferiti WHERE fk_id_utente = ? AND fk_id_ristorante = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idUtente);
@@ -264,7 +264,7 @@ public class RistoranteDAOImpl implements RistoranteDAO {
     @Override
     public ArrayList<Ristorante> getPreferitiUtente(int idUtente) {
         ArrayList<Ristorante> list = new ArrayList<>();
-        String sql = "SELECT r.* FROM ristorantitheknife r INNER JOIN preferiti p ON r.id_ristorante = p.id_ristorante WHERE p.id_utente = ?";
+        String sql = "SELECT r.* FROM ristorantitheknife r INNER JOIN preferiti p ON r.id_ristorante = p.fk_id_ristorante WHERE p.fk_id_utente = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idUtente);

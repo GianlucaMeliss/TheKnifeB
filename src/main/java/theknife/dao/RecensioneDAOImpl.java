@@ -36,7 +36,7 @@ public class RecensioneDAOImpl implements RecensioneDAO {
 
         // Se è una risposta, verifichiamo atomicamente che non ne esista già un'altra
         if (idPadre != -1) {
-            String checkSql = "SELECT COUNT(*) FROM Recensioni WHERE id_padre = ?";
+            String checkSql = "SELECT COUNT(*) FROM Recensioni WHERE id_recensione_padre = ?";
             try (Connection conn = DatabaseConnection.getConnection();
                  PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
                 checkPs.setInt(1, idPadre);
@@ -52,12 +52,15 @@ public class RecensioneDAOImpl implements RecensioneDAO {
             }
         }
 
-        String sql = "INSERT INTO Recensioni (id_ristorante, id_utente, id_padre, voto, commento, data_recensione) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConnection.getConnection();
+        String sql = "INSERT INTO Recensioni (fk_id_ristorante, fk_id_utente, id_recensione_padre, voto, commento, data) VALUES (?, ?, ?, ?, ?, ?)";        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, r.fkIdRistorante);
             ps.setInt(2, r.fkIdUtente);
-            ps.setInt(3, idPadre);
+            if (idPadre == -1) {
+                ps.setNull(3, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(3, idPadre);
+            }
             ps.setInt(4, r.voto);
             ps.setString(5, r.commento);
             ps.setDate(6, r.data != null ? Date.valueOf(r.data) : Date.valueOf(java.time.LocalDate.now()));
@@ -70,7 +73,7 @@ public class RecensioneDAOImpl implements RecensioneDAO {
 
     @Override
     public boolean modificaRecensione(int idRecensione, Recensione r) {
-        String sql = "UPDATE Recensioni SET voto = ?, commento = ?, data_recensione = ? WHERE id_recensione = ?";
+        String sql = "UPDATE Recensioni SET voto = ?, commento = ?, data = ? WHERE id_recensione = ?";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, r.voto);
@@ -86,7 +89,7 @@ public class RecensioneDAOImpl implements RecensioneDAO {
 
     @Override
     public boolean eliminaRecensione(int idRecensione) {
-        String sqlReplies = "DELETE FROM Recensioni WHERE id_padre = ?";
+        String sqlReplies = "DELETE FROM Recensioni WHERE id_recensione_padre = ?";
         String sqlMain = "DELETE FROM Recensioni WHERE id_recensione = ?";
         try (Connection conn = DatabaseConnection.getConnection()) {
             conn.setAutoCommit(false);
@@ -112,22 +115,23 @@ public class RecensioneDAOImpl implements RecensioneDAO {
     @Override
     public ArrayList<Recensione> getRecensioniByRistorante(int idRistorante) {
         ArrayList<Recensione> list = new ArrayList<>();
-        String sql = "SELECT rec.*, u.username FROM Recensioni rec " +
-                "LEFT JOIN Utenti u ON rec.id_utente = u.id_utente " +
-                "WHERE rec.id_ristorante = ? ORDER BY rec.data_recensione DESC, rec.id_recensione ASC";
+        String sql = "SELECT rec.*, u.username FROM Recensioni rec LEFT JOIN Utenti u ON rec.fk_id_utente = u.id_utente WHERE rec.fk_id_ristorante = ? ORDER BY rec.data DESC, rec.id_recensione ASC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idRistorante);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
+                    int idPadreLetto = rs.getInt("id_recensione_padre");
+                    Integer idPadreDaPassare = rs.wasNull() ? -1 : idPadreLetto;
+
                     Recensione r = new Recensione(
-                            rs.getInt("id_ristorante"),
-                            rs.getInt("id_utente"),
+                            rs.getInt("fk_id_ristorante"),
+                            rs.getInt("fk_id_utente"),
                             rs.getInt("voto"),
                             rs.getString("commento"),
-                            rs.getDate("data_recensione") != null ? rs.getDate("data_recensione").toLocalDate() : null,
+                            rs.getDate("data") != null ? rs.getDate("data").toLocalDate() : null,
                             rs.getInt("id_recensione"),
-                            rs.getInt("id_padre")
+                            idPadreDaPassare // <-- Ora passiamo la variabile calcolata qui
                     );
                     r.authorUsername = rs.getString("username");
                     list.add(r);
@@ -142,22 +146,23 @@ public class RecensioneDAOImpl implements RecensioneDAO {
     @Override
     public ArrayList<Recensione> getRecensioniByUtente(int idUtente) {
         ArrayList<Recensione> list = new ArrayList<>();
-        String sql = "SELECT rec.*, r.nome AS rest_nome FROM Recensioni rec " +
-                "LEFT JOIN RistorantiTheKnife r ON rec.id_ristorante = r.id_ristorante " +
-                "WHERE rec.id_utente = ? AND rec.id_padre = -1 ORDER BY rec.data_recensione DESC";
+        String sql = "SELECT rec.*, r.nome AS rest_nome FROM Recensioni rec LEFT JOIN RistorantiTheKnife r ON rec.fk_id_ristorante = r.id_ristorante WHERE rec.fk_id_utente = ? AND rec.id_recensione_padre IS NULL ORDER BY rec.data DESC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idUtente);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
+                    int idPadreLetto = rs.getInt("id_recensione_padre");
+                    Integer idPadreDaPassare = rs.wasNull() ? -1 : idPadreLetto;
+
                     Recensione r = new Recensione(
-                            rs.getInt("id_ristorante"),
-                            rs.getInt("id_utente"),
+                            rs.getInt("fk_id_ristorante"),
+                            rs.getInt("fk_id_utente"),
                             rs.getInt("voto"),
                             rs.getString("commento"),
-                            rs.getDate("data_recensione") != null ? rs.getDate("data_recensione").toLocalDate() : null,
+                            rs.getDate("data") != null ? rs.getDate("data").toLocalDate() : null,
                             rs.getInt("id_recensione"),
-                            rs.getInt("id_padre")
+                            idPadreDaPassare // <-- Ora passiamo la variabile calcolata qui
                     );
                     r.restaurantName = rs.getString("rest_nome");
                     list.add(r);
@@ -171,8 +176,7 @@ public class RecensioneDAOImpl implements RecensioneDAO {
 
     @Override
     public double[] getStatisticheRistorante(int idRistorante) {
-        String sql = "SELECT AVG(voto) AS media, COUNT(*) AS totale FROM Recensioni WHERE id_ristorante = ? AND id_padre = -1";
-        try (Connection conn = DatabaseConnection.getConnection();
+        String sql = "SELECT AVG(voto) AS media, COUNT(*) AS totale FROM Recensioni WHERE fk_id_ristorante = ? AND id_recensione_padre IS NULL";        try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idRistorante);
             try (ResultSet rs = ps.executeQuery()) {
