@@ -61,7 +61,11 @@ public class RecensioneDAOImpl implements RecensioneDAO {
             } else {
                 ps.setInt(3, idPadre);
             }
-            ps.setInt(4, r.voto);
+            if (r.voto == -1) {
+                ps.setNull(4, java.sql.Types.INTEGER);
+            } else {
+                ps.setInt(4, r.voto);
+            }
             ps.setString(5, r.commento);
             ps.setDate(6, r.data != null ? Date.valueOf(r.data) : Date.valueOf(java.time.LocalDate.now()));
             return ps.executeUpdate() > 0;
@@ -124,14 +128,17 @@ public class RecensioneDAOImpl implements RecensioneDAO {
                     int idPadreLetto = rs.getInt("id_recensione_padre");
                     Integer idPadreDaPassare = rs.wasNull() ? -1 : idPadreLetto;
 
+                    int votoLetto = rs.getInt("voto");
+                    int votoDaPassare = rs.wasNull() ? -1 : votoLetto;
+
                     Recensione r = new Recensione(
                             rs.getInt("fk_id_ristorante"),
                             rs.getInt("fk_id_utente"),
-                            rs.getInt("voto"),
+                            votoDaPassare, // <-- Usiamo la variabile calcolata per il voto!
                             rs.getString("commento"),
                             rs.getDate("data") != null ? rs.getDate("data").toLocalDate() : null,
                             rs.getInt("id_recensione"),
-                            idPadreDaPassare // <-- Ora passiamo la variabile calcolata qui
+                            idPadreDaPassare
                     );
                     r.authorUsername = rs.getString("username");
                     list.add(r);

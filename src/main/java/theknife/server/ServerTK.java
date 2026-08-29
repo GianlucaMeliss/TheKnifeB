@@ -18,7 +18,6 @@ public class ServerTK {
 
         Scanner scanner = new Scanner(System.in);
 
-        // Richiesta configurazione DB conforme alle specifiche della slide
         System.out.print("Inserisci Host DB PostgreSQL [default: localhost]: ");
         String host = scanner.nextLine().trim();
         if (host.isEmpty()) host = "localhost";
@@ -55,7 +54,6 @@ public class ServerTK {
             try {
                 registry = LocateRegistry.createRegistry(RMI_PORT);
             } catch (Exception e) {
-                // Se già esistente sulla JVM corrente o porta già occupata da rmiregistry
                 registry = LocateRegistry.getRegistry(RMI_PORT);
             }
 

@@ -9,19 +9,13 @@ import java.util.ArrayList;
 
 public class RistoranteDAOImpl implements RistoranteDAO {
 
-    // 1. IL METODO TRADUTTORE (Da Numero a Enum)
     private TipoCucina traduciIdInEnum(int idCucina) {
-        // Solitamente nel DB gli ID partono da 1, mentre in Java gli Enum partono da 0.
-        // Se nel vostro DB l'id 1 corrisponde al primo tipo di cucina, facciamo -1.
         TipoCucina[] valori = TipoCucina.values();
         if (idCucina > 0 && idCucina <= valori.length) {
             return valori[idCucina - 1];
         }
         return null;
     }
-
-    // 2. IL METODO CHE INTERROGA LA TABELLA RELAZIONALE
-    // Modifica: ora riceve la Connection come parametro per non aprirne una nuova ogni volta
     private ArrayList<TipoCucina> getCucinePerRistorante(int idRistorante, Connection conn) {
         ArrayList<TipoCucina> cucine = new ArrayList<>();
         String sql = "SELECT fk_id_tipo_cucina FROM ristorante_cucina WHERE fk_id_ristorante = ?";
@@ -41,7 +35,6 @@ public class RistoranteDAOImpl implements RistoranteDAO {
         return cucine;
     }
 
-    // Modifica: ora riceve la Connection come parametro per passarla a getCucinePerRistorante
     private Ristorante mapRow(ResultSet rs, Connection conn) throws SQLException {
         int id = rs.getInt("id_ristorante");
         String nome = rs.getString("nome");
@@ -55,7 +48,6 @@ public class RistoranteDAOImpl implements RistoranteDAO {
         boolean delivery = rs.getBoolean("consegna");
         boolean online = rs.getBoolean("pren_online");
 
-        // 3. UNIAMO I DATI PRIMA DELLA CREAZIONE DELL'OGGETTO (L'idea di Melis!)
         ArrayList<TipoCucina> cucine = getCucinePerRistorante(id, conn);
 
         Ristorante r = new Ristorante(nome, indirizzo, citta, nazione, lat, lon, prezzo, cucine);
@@ -104,9 +96,7 @@ public class RistoranteDAOImpl implements RistoranteDAO {
                         "WHERE 1=1 "
         );
 
-        // --- BIVIO LOGICO: Coordinate o Città ---
         if (lat != null && lon != null) {
-            // Formula di Haversine in SQL: raggio di 20 km
             sql.append("AND (6371 * acos(least(greatest(cos(radians(?)) * cos(radians(r.latitudine)) * cos(radians(r.longitudine) - radians(?)) + sin(radians(?)) * sin(radians(r.latitudine)), -1.0), 1.0))) <= 20 ");
         } else if (citta != null && !citta.isBlank()) {
             sql.append("AND r.citta ILIKE ? ");
@@ -131,8 +121,6 @@ public class RistoranteDAOImpl implements RistoranteDAO {
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             int idx = 1;
-
-            // Iniezione dei parametri per il bivio logico
             if (lat != null && lon != null) {
                 ps.setDouble(idx++, lat);
                 ps.setDouble(idx++, lon);
@@ -167,10 +155,13 @@ public class RistoranteDAOImpl implements RistoranteDAO {
 
     @Override
     public boolean aggiungiRistorante(Ristorante r, int idRistoratore) {
-        String sql = "INSERT INTO ristorantitheknife (nome, indirizzo, citta, nazione, latitudine, longitudine, prezzo, consegna, pren_online, id_ristoratore) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // 1. Rimuoviamo id_ristoratore da questa query
+        String sql = "INSERT INTO ristorantitheknife (nome, indirizzo, citta, nazione, latitudine, longitudine, prezzo, consegna, pren_online) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
             ps.setString(1, r.nome);
             ps.setString(2, r.indirizzo);
             ps.setString(3, r.citta);
@@ -180,15 +171,16 @@ public class RistoranteDAOImpl implements RistoranteDAO {
             ps.setFloat(7, r.prezzo);
             ps.setBoolean(8, r.consegna);
             ps.setBoolean(9, r.pren_online);
-            ps.setInt(10, idRistoratore);
 
-            // 5. SE INSERISCE CON SUCCESSO IL RISTORANTE, DEVE SALVARE ANCHE LE CUCINE (Relazioni)
             int affectedRows = ps.executeUpdate();
             if (affectedRows > 0) {
                 try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
                         int nuovoIdRistorante = generatedKeys.getInt(1);
+
                         salvaCucineRistorante(nuovoIdRistorante, r.tipoCucina, conn);
+
+                        associaRistoranteARistoratore(nuovoIdRistorante, idRistoratore, conn);
                     }
                 }
                 return true;
@@ -199,9 +191,17 @@ public class RistoranteDAOImpl implements RistoranteDAO {
             return false;
         }
     }
+    private void associaRistoranteARistoratore(int idRistorante, int idRistoratore, Connection conn) {
+        String sql = "INSERT INTO gestione_ristoranti (fk_id_utente, fk_id_ristorante) VALUES (?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, idRistoratore);
+            ps.setInt(2, idRistorante);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
-    // Metodo di supporto per salvare le cucine quando si crea un nuovo ristorante
-    // Modifica: ora riceve la Connection come parametro
     private void salvaCucineRistorante(int idRistorante, ArrayList<TipoCucina> cucine, Connection conn) {
         if (cucine == null || cucine.isEmpty()) return;
         String sql = "INSERT INTO ristorante_cucina (fk_id_ristorante, fk_id_tipo_cucina) VALUES (?, ?)";
@@ -220,7 +220,10 @@ public class RistoranteDAOImpl implements RistoranteDAO {
     @Override
     public ArrayList<Ristorante> getRistorantiGestiti(int idRistoratore) {
         ArrayList<Ristorante> list = new ArrayList<>();
-        String sql = "SELECT * FROM ristorantitheknife WHERE id_ristoratore = ? ORDER BY id_ristorante ASC";
+        // Modificata la query per usare la tabella ponte GESTIONE_RISTORANTI
+        String sql = "SELECT r.* FROM ristorantitheknife r " +
+                "INNER JOIN gestione_ristoranti g ON r.id_ristorante = g.fk_id_ristorante " +
+                "WHERE g.fk_id_utente = ? ORDER BY r.id_ristorante ASC";
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, idRistoratore);
