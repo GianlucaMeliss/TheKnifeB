@@ -37,7 +37,8 @@ import javafx.scene.layout.*;
 public class StartMenuView {
 
     private final MainApp mainApp;
-    private final VBox view;
+    private final BorderPane view;
+    private TextField locationField;
 
     /**
      * Costruttore della vista StartMenuView.
@@ -45,7 +46,7 @@ public class StartMenuView {
      */
     public StartMenuView(MainApp mainApp) {
         this.mainApp = mainApp;
-        this.view = new VBox(20);
+        this.view = new BorderPane();
         createUI();
     }
 
@@ -87,6 +88,7 @@ public class StartMenuView {
         guestBox.setMaxWidth(320);
 
         container.getChildren().addAll(title, btnLogin, btnRegister, new Separator(), guestBox);
+
         view.setCenter(container);
     }
 
@@ -110,5 +112,5 @@ public class StartMenuView {
      * Restituisce il nodo radice di questa vista per l'inserimento nel layout principale.
      * @return Il {@code BorderPane} che contiene l'intera interfaccia di questa vista.
      */
-    public BorderPane getView() { return view; }
+    public BorderPane getView() { return view; } 
 }
