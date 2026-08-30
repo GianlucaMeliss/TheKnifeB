@@ -7,8 +7,8 @@
  * Nome: Gianluca
  * Cognome: Melis
  * Matricola:761289
- * Sede: VA
  *
+ * Sede: VA
  * Nome: Simone
  * Cognome: Zamberletti
  * Matricola:761355
@@ -28,9 +28,12 @@ import java.util.Map;
  * Classe astratta che definisce le operazioni base disponibili per un utente.
  * <p>
  * Fornisce un contratto per le operazioni comuni come la ricerca di ristoranti e la visualizzazione delle recensioni,
- * che possono essere implementate in modo diverso a seconda del tipo di utente.
+ * che possono essere implementate in modo diverso a seconda del tipo di utente (Ospite, Cliente, Ristoratore).
  * </p>
  * @author Alessandro Melnyk
+ * @author Gianluca Melis
+ * @author Simone Zamberletti
+ * @author Davide Redemagni
  */
 public abstract class OperazioniUtente {
 

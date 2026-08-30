@@ -1,3 +1,24 @@
+/*
+ * Nome: Alessandro
+ * Cognome: Melnyk
+ * Matricola:761001
+ * Sede: VA
+ *
+ * Nome: Gianluca
+ * Cognome: Melis
+ * Matricola:761289
+ *
+ * Sede: VA
+ * Nome: Simone
+ * Cognome: Zamberletti
+ * Matricola:761355
+ * Sede: VA
+ *
+ * Nome: Davide
+ * Cognome: Redemagni
+ * Matricola:760043
+ * Sede: VA
+ */
 package theknife;
 
 import java.io.Serializable;
@@ -11,9 +32,10 @@ import java.time.LocalDate;
  * sul commento e sulla data.
  * Implementa {@link Serializable} per la trasmissione RMI.
  *
+ * @author Alessandro Melnyk
  * @author Gianluca Melis
- * @author Davide Redemagni
  * @author Simone Zamberletti
+ * @author Davide Redemagni
  */
 public class Recensione implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -50,6 +72,13 @@ public class Recensione implements Serializable {
 
     /**
      * Costruttore completo della recensione.
+     * @param fkIdRistorante ID del ristorante recensito
+     * @param fkIdUtente ID dell'utente autore
+     * @param voto Voto assegnato (1-5), -1 se risposta
+     * @param commento Testo della recensione
+     * @param data Data di inserimento
+     * @param idRecensione ID univoco dal database
+     * @param idRecensionePadre ID della recensione a cui si risponde, -1 se principale
      */
     public Recensione(Integer fkIdRistorante, Integer fkIdUtente, int voto, String commento, LocalDate data,
                       Integer idRecensione, Integer idRecensionePadre ) {
@@ -64,6 +93,11 @@ public class Recensione implements Serializable {
 
     /**
      * Costruttore per recensioni principali (senza risposta).
+     * @param fkIdRistorante ID del ristorante recensito
+     * @param fkIdUtente ID dell'utente autore
+     * @param voto Voto assegnato (1-5)
+     * @param commento Testo della recensione
+     * @param data Data di inserimento
      */
     public Recensione(Integer fkIdRistorante, Integer fkIdUtente, int voto, String commento, LocalDate data) {
         this(fkIdRistorante,fkIdUtente,voto,commento,data,null,-1);
@@ -71,6 +105,9 @@ public class Recensione implements Serializable {
 
     /**
      * Costruttore per recensioni risposta con solo commento e ID della recensione padre.
+     * @param idRecensione ID della recensione padre
+     * @param fkIdRistorante ID del ristorante
+     * @param commento Testo della risposta
      */
     public Recensione(Integer idRecensione, Integer fkIdRistorante,String commento) {
         this(fkIdRistorante,-1,-1,commento,LocalDate.now(),-1,idRecensione);

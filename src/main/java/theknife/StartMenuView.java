@@ -7,9 +7,9 @@
  * Nome: Gianluca
  * Cognome: Melis
  * Matricola:761289
+ *
  * Sede: VA
  * Nome: Simone
- *
  * Cognome: Zamberletti
  * Matricola:761355
  * Sede: VA
@@ -28,33 +28,29 @@ import javafx.scene.layout.*;
 /**
  * Gestisce la vista del menu di avvio dell'applicazione.
  * <p>
- * Questa è la prima schermata che l'utente visualizza e funge da punto di ingresso principale,
- * offrendo le opzioni per effettuare il login, registrarsi o accedere come utente non
- * registrato (guest) specificando una località.
+ * Questa è la schermata iniziale mostrata a tutti gli utenti (anche non loggati).
+ * Permette di accedere alla ricerca dei ristoranti, di effettuare il login
+ * o di aprire il modulo di registrazione.
  * </p>
  * @author Simone Zamberletti
  */
 public class StartMenuView {
+
     private final MainApp mainApp;
-    private final BorderPane view;
-    private TextField locationField;
+    private final VBox view;
 
     /**
-     * Costruttore della vista del menu di avvio.
-     * @param mainApp Il riferimento all'applicazione principale, necessario per la navigazione.
+     * Costruttore della vista StartMenuView.
+     * @param mainApp Il riferimento all'applicazione principale.
      */
     public StartMenuView(MainApp mainApp) {
         this.mainApp = mainApp;
-        this.view = new BorderPane();
+        this.view = new VBox(20);
         createUI();
     }
 
     /**
-     * Costruisce e assembla i componenti grafici che compongono la vista.
-     * <p>
-     * Organizza il layout posizionando il titolo, i pulsanti di azione principali
-     * (Login, Registrazione) e la sezione dedicata all'accesso come guest.
-     * </p>
+     * Inizializza l'interfaccia utente.
      */
     private void createUI() {
         VBox container = new VBox(25);

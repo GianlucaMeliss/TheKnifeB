@@ -1,3 +1,24 @@
+/*
+ * Nome: Alessandro
+ * Cognome: Melnyk
+ * Matricola:761001
+ * Sede: VA
+ *
+ * Nome: Gianluca
+ * Cognome: Melis
+ * Matricola:761289
+ *
+ * Sede: VA
+ * Nome: Simone
+ * Cognome: Zamberletti
+ * Matricola:761355
+ * Sede: VA
+ *
+ * Nome: Davide
+ * Cognome: Redemagni
+ * Matricola:760043
+ * Sede: VA
+ */
 package theknife.dao;
 
 import theknife.Ristorante;
@@ -7,8 +28,23 @@ import theknife.db.DatabaseConnection;
 import java.sql.*;
 import java.util.ArrayList;
 
+/**
+ * Implementazione dell'interfaccia {@link RistoranteDAO} per la persistenza su database SQL.
+ * Gestisce il recupero, la ricerca e la memorizzazione dei ristoranti e dei preferiti.
+ *
+ * @author Alessandro Melnyk
+ * @author Gianluca Melis
+ * @author Simone Zamberletti
+ * @author Davide Redemagni
+ */
 public class RistoranteDAOImpl implements RistoranteDAO {
 
+    /**
+     * Converte l'ID numerico della cucina memorizzato nel database nel corrispondente valore enum {@link TipoCucina}.
+     *
+     * @param idCucina l'ID della cucina (1-based)
+     * @return il valore {@link TipoCucina} corrispondente, o null se l'ID non è valido
+     */
     private TipoCucina traduciIdInEnum(int idCucina) {
         TipoCucina[] valori = TipoCucina.values();
         if (idCucina > 0 && idCucina <= valori.length) {
@@ -16,8 +52,18 @@ public class RistoranteDAOImpl implements RistoranteDAO {
         }
         return null;
     }
+
+    /**
+     * Recupera la lista dei tipi di cucina associati a un ristorante specifico.
+     * Interroga la tabella ponte 'ristorante_cucina'.
+     *
+     * @param idRistorante l'ID del ristorante
+     * @param conn la connessione SQL attiva
+     * @return un'ArrayList di {@link TipoCucina}
+     */
     private ArrayList<TipoCucina> getCucinePerRistorante(int idRistorante, Connection conn) {
         ArrayList<TipoCucina> cucine = new ArrayList<>();
+        // ... (rest of the code)
         String sql = "SELECT fk_id_tipo_cucina FROM ristorante_cucina WHERE fk_id_ristorante = ?";
 
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -35,6 +81,14 @@ public class RistoranteDAOImpl implements RistoranteDAO {
         return cucine;
     }
 
+    /**
+     * Mappa una riga del {@link ResultSet} in un oggetto {@link Ristorante}.
+     *
+     * @param rs il ResultSet posizionato sulla riga da mappare
+     * @param conn la connessione SQL attiva (necessaria per caricare le cucine)
+     * @return un oggetto {@link Ristorante} popolato
+     * @throws SQLException in caso di errori nell'estrazione dei dati
+     */
     private Ristorante mapRow(ResultSet rs, Connection conn) throws SQLException {
         int id = rs.getInt("id_ristorante");
         String nome = rs.getString("nome");
@@ -57,6 +111,11 @@ public class RistoranteDAOImpl implements RistoranteDAO {
         return r;
     }
 
+    /**
+     * Recupera tutti i ristoranti memorizzati nella tabella 'ristorantitheknife'.
+     *
+     * @return lista di tutti i ristoranti ordinati per nome
+     */
     @Override
     public ArrayList<Ristorante> getAllRistoranti() {
         ArrayList<Ristorante> list = new ArrayList<>();
@@ -71,6 +130,12 @@ public class RistoranteDAOImpl implements RistoranteDAO {
         return list;
     }
 
+    /**
+     * Cerca un ristorante per ID nella tabella 'ristorantitheknife'.
+     *
+     * @param id ID del ristorante
+     * @return oggetto Ristorante se trovato, null altrimenti
+     */
     @Override
     public Ristorante getRistoranteById(int id) {
         String sql = "SELECT * FROM ristorantitheknife WHERE id_ristorante = ?";
@@ -86,6 +151,13 @@ public class RistoranteDAOImpl implements RistoranteDAO {
         return null;
     }
 
+    /**
+     * Esegue una query SQL complessa per filtrare i ristoranti in base a criteri geografici,
+     * tipologici, economici e di valutazione.
+     * Utilizza la formula di Haversine per il calcolo della distanza entro 20km se sono fornite le coordinate.
+     *
+     * @return lista dei ristoranti filtrati
+     */
     @Override
     public ArrayList<Ristorante> cercaAvanzata(String citta, Double lat, Double lon, String nome, String tipoCucina, Float pMin, Float pMax, boolean delivery, boolean online, Double ratingMin) {
         ArrayList<Ristorante> list = new ArrayList<>();
@@ -153,6 +225,14 @@ public class RistoranteDAOImpl implements RistoranteDAO {
         return list;
     }
 
+    /**
+     * Inserisce un nuovo ristorante nel database gestendo la transazione per salvare
+     * anche le tipologie di cucina e l'associazione con il ristoratore.
+     *
+     * @param r oggetto ristorante da salvare
+     * @param idRistoratore ID dell'utente ristoratore proprietario
+     * @return true se l'operazione completa ha successo
+     */
     @Override
     public boolean aggiungiRistorante(Ristorante r, int idRistoratore) {
         // 1. Rimuoviamo id_ristoratore da questa query
@@ -202,6 +282,9 @@ public class RistoranteDAOImpl implements RistoranteDAO {
         }
     }
 
+    /**
+     * Inserisce le relazioni tra ristorante e tipologie di cucina nella tabella 'ristorante_cucina'.
+     */
     private void salvaCucineRistorante(int idRistorante, ArrayList<TipoCucina> cucine, Connection conn) {
         if (cucine == null || cucine.isEmpty()) return;
         String sql = "INSERT INTO ristorante_cucina (fk_id_ristorante, fk_id_tipo_cucina) VALUES (?, ?)";
@@ -217,6 +300,9 @@ public class RistoranteDAOImpl implements RistoranteDAO {
         }
     }
 
+    /**
+     * Recupera i ristoranti associati a un ristoratore tramite la tabella 'gestione_ristoranti'.
+     */
     @Override
     public ArrayList<Ristorante> getRistorantiGestiti(int idRistoratore) {
         ArrayList<Ristorante> list = new ArrayList<>();
@@ -236,6 +322,9 @@ public class RistoranteDAOImpl implements RistoranteDAO {
         return list;
     }
 
+    /**
+     * Inserisce un record nella tabella 'preferiti'.
+     */
     @Override
     public boolean aggiungiPreferito(int idUtente, int idRistorante) {
         String sql = "INSERT INTO preferiti (fk_id_utente, fk_id_ristorante) VALUES (?, ?) ON CONFLICT DO NOTHING";
@@ -250,6 +339,9 @@ public class RistoranteDAOImpl implements RistoranteDAO {
         }
     }
 
+    /**
+     * Elimina un record dalla tabella 'preferiti'.
+     */
     @Override
     public boolean rimuoviPreferito(int idUtente, int idRistorante) {
         String sql = "DELETE FROM preferiti WHERE fk_id_utente = ? AND fk_id_ristorante = ?";
@@ -264,6 +356,9 @@ public class RistoranteDAOImpl implements RistoranteDAO {
         }
     }
 
+    /**
+     * Recupera i ristoranti preferiti di un utente tramite JOIN con la tabella 'preferiti'.
+     */
     @Override
     public ArrayList<Ristorante> getPreferitiUtente(int idUtente) {
         ArrayList<Ristorante> list = new ArrayList<>();

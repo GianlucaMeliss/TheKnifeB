@@ -7,8 +7,8 @@
  * Nome: Gianluca
  * Cognome: Melis
  * Matricola:761289
- * Sede: VA
  *
+ * Sede: VA
  * Nome: Simone
  * Cognome: Zamberletti
  * Matricola:761355
@@ -35,11 +35,13 @@ import java.time.LocalDate;
 
 /**
  * Rappresenta un utente non registrato dell'applicazione.
- * Questa classe definisce le operazioni disponibili per gli utenti che non hanno
- * ancora effettuato l'accesso o la registrazione, come la possibilità di creare un
- * nuovo account e di visualizzare le recensioni dei ristoranti.
+ * Definisce le operazioni disponibili per gli utenti che non hanno effettuato l'accesso,
+ * come la ricerca, la visualizzazione di recensioni e la registrazione di nuovi account tramite il server remoto.
  *
- * @author Melnyk Alessandro
+ * @author Alessandro Melnyk
+ * @author Gianluca Melis
+ * @author Simone Zamberletti
+ * @author Davide Redemagni
  */
 public class UtenteNonRegistrato extends OperazioniUtente{
     /**
@@ -60,15 +62,10 @@ public class UtenteNonRegistrato extends OperazioniUtente{
 
 
     /**
-     * Gestisce il processo di registrazione di un nuovo utente.
-     * Il metodo acquisisce i dati dell'utente tramite console, richiedendo di scegliere
-     * un ruolo (Cliente o Ristoratore) e di inserire le informazioni personali.
-     * Effettua una verifica per assicurarsi che l'username non sia già in uso per il ruolo
-     * scelto prima di salvare il nuovo utente.
+     * Gestisce il processo di registrazione di un nuovo utente tramite il servizio remoto.
+     * Crea un oggetto {@link Utente} (Cliente o Ristoratore) e lo invia al server
+     * per la persistenza su database SQL.
      * @return <code>true</code> se la registrazione è avvenuta con successo, <code>false</code> altrimenti.
-     * Il metodo ritorna <code>false</code> se il ruolo inserito non è valido, il formato della data
-     * non è corretto, l'username è già esistente o si verifica un altro errore
-     * durante l'inserimento dei dati.
      */
     public static boolean Registrazione(
                                  String ruoloInput,

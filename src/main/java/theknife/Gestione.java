@@ -7,8 +7,8 @@
  * Nome: Gianluca
  * Cognome: Melis
  * Matricola:761289
- * Sede: VA
  *
+ * Sede: VA
  * Nome: Simone
  * Cognome: Zamberletti
  * Matricola:761355
@@ -28,11 +28,25 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * Classe di utilità per cifratura AES e algoritmi di supporto.
+ * Classe di utilità per cifratura AES e algoritmi di supporto (ordinamento).
+ * 
+ * @author Alessandro Melnyk
+ * @author Gianluca Melis
+ * @author Simone Zamberletti
+ * @author Davide Redemagni
  */
 public class Gestione {
 
+    /**
+     * Classe interna per algoritmi di ordinamento personalizzati.
+     */
     public static abstract class Sort<T> {
+        /**
+         * Algoritmo Merge Sort per ordinare una lista di ristoranti.
+         * 
+         * @param list lista di ristoranti da ordinare
+         * @param comparator criterio di comparazione
+         */
         public static <T> void mergeSort(ArrayList<Ristorante> list, Comparator<Ristorante> comparator) {
             if (list.size() <= 1) return;
             int mid = list.size() / 2;
@@ -62,9 +76,19 @@ public class Gestione {
         }
     }
 
+    /**
+     * Classe interna per la gestione della cifratura AES delle password.
+     */
     public static class CifraturaUtils {
         private static final String CHIAVE = "1234567890123456";
 
+        /**
+         * Cripta una stringa utilizzando l'algoritmo AES.
+         * 
+         * @param testoChiaro stringa da criptare
+         * @return stringa criptata in formato Base64
+         * @throws Exception in caso di errori di cifratura
+         */
         public static String cripta(String testoChiaro) throws Exception {
             Cipher cipher = Cipher.getInstance("AES");
             SecretKeySpec chiaveSpec = new SecretKeySpec(CHIAVE.getBytes(), "AES");
@@ -73,6 +97,13 @@ public class Gestione {
             return Base64.getEncoder().encodeToString(encryptedBytes);
         }
 
+        /**
+         * Decripta una stringa cifrata in AES.
+         * 
+         * @param testoCriptato stringa in Base64 da decifrare
+         * @return stringa in chiaro
+         * @throws Exception in caso di errori di decifratura
+         */
         public static String decripta(String testoCriptato) throws Exception {
             Cipher cipher = Cipher.getInstance("AES");
             SecretKeySpec chiaveSpec = new SecretKeySpec(CHIAVE.getBytes(), "AES");

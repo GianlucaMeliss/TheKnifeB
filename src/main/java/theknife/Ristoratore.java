@@ -7,8 +7,8 @@
  * Nome: Gianluca
  * Cognome: Melis
  * Matricola:761289
- * Sede: VA
  *
+ * Sede: VA
  * Nome: Simone
  * Cognome: Zamberletti
  * Matricola:761355
@@ -31,8 +31,11 @@ import java.util.*;
 /**
  * Classe che rappresenta l'utente ristoratore, estensione della classe {@link Utente}.
  * Permette la gestione di ristoranti e risposte alle recensioni tramite il server remoto (RMI).
- * @author Gianluca
- * @author Simone
+ * 
+ * @author Alessandro Melnyk
+ * @author Gianluca Melis
+ * @author Simone Zamberletti
+ * @author Davide Redemagni
  */
 public class Ristoratore extends Utente {
     private static final long serialVersionUID = 1L;
@@ -103,6 +106,8 @@ public class Ristoratore extends Utente {
 
     /**
      * Recupera la lista dei ristoranti gestiti dal ristoratore dal server.
+     * 
+     * @return una lista di oggetti {@link Ristorante}
      */
     public ArrayList<Ristorante> getRistorantiGestiti() {
         try {

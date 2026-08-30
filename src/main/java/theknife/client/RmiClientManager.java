@@ -1,3 +1,24 @@
+/*
+ * Nome: Alessandro
+ * Cognome: Melnyk
+ * Matricola:761001
+ * Sede: VA
+ *
+ * Nome: Gianluca
+ * Cognome: Melis
+ * Matricola:761289
+ *
+ * Sede: VA
+ * Nome: Simone
+ * Cognome: Zamberletti
+ * Matricola:761355
+ * Sede: VA
+ *
+ * Nome: Davide
+ * Cognome: Redemagni
+ * Matricola:760043
+ * Sede: VA
+ */
 package theknife.client;
 
 import theknife.remote.TheKnifeService;
@@ -6,7 +27,13 @@ import java.rmi.registry.Registry;
 
 /**
  * Gestore della connessione RMI lato Client.
- * Implementa il pattern Singleton per fornire un accesso centralizzato al servizio remoto.
+ * Implementa il pattern Singleton per fornire un accesso centralizzato al servizio remoto,
+ * il quale interagisce con il database SQL lato server.
+ *
+ * @author Alessandro Melnyk
+ * @author Gianluca Melis
+ * @author Simone Zamberletti
+ * @author Davide Redemagni
  */
 public class RmiClientManager {
     private static RmiClientManager instance;

@@ -1,6 +1,6 @@
-﻿Alessandro Melnyk 761001 (VA)
+Alessandro Melnyk 761001 (VA)
 Gianluca Melis 761289 (VA)
 Simone Zamberletti 761355 (VA)
 Davide Redemagni 760043 (VA)
 
-link al repository GitHub di progetto:https://github.com/GianlucaMeliss/TheKnife
+link al repository GitHub di progetto:https://github.com/GianlucaMeliss/TheKnifeB

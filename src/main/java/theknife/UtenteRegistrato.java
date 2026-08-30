@@ -7,8 +7,8 @@
  * Nome: Gianluca
  * Cognome: Melis
  * Matricola:761289
- * Sede: VA
  *
+ * Sede: VA
  * Nome: Simone
  * Cognome: Zamberletti
  * Matricola:761355
@@ -132,6 +132,9 @@ public class UtenteRegistrato extends Utente {
 
     /**
      * Aggiunge un ristorante ai preferiti tramite il server remoto.
+     * 
+     * @param r il ristorante da aggiungere ai preferiti
+     * @return true se l'operazione ha successo
      */
     public boolean AggiungiPreferiti(Ristorante r) {
         try {
@@ -146,6 +149,9 @@ public class UtenteRegistrato extends Utente {
 
     /**
      * Rimuove un ristorante dai preferiti tramite il server remoto.
+     * 
+     * @param r il ristorante da rimuovere dai preferiti
+     * @return true se l'operazione ha successo
      */
     public boolean RimuoviPreferito(Ristorante r) {
         try {
@@ -160,6 +166,8 @@ public class UtenteRegistrato extends Utente {
 
     /**
      * Recupera la mappa completa dei preferiti (simulata tramite chiamata remota per compatibilità).
+     * 
+     * @return una mappa con l'ID utente e la lista degli ID dei ristoranti preferiti
      */
     public HashMap<Integer, ArrayList<Integer>> VisualizzaPreferiti() {
         HashMap<Integer, ArrayList<Integer>> map = new HashMap<>();
@@ -181,6 +189,11 @@ public class UtenteRegistrato extends Utente {
 
     /**
      * Controlla se un dato ristorante è tra i preferiti.
+     * 
+     * @param idUtente ID dell'utente da controllare
+     * @param idRistorante ID del ristorante da verificare
+     * @param preferiti mappa dei preferiti caricata
+     * @return true se il ristorante è presente tra i preferiti dell'utente
      */
     public boolean VerificaPreferiti(int idUtente, int idRistorante, HashMap<Integer, ArrayList<Integer>> preferiti) {
         ArrayList<Integer> lista = preferiti.get(idUtente);

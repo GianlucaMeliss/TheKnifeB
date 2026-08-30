@@ -1,3 +1,24 @@
+/*
+ * Nome: Alessandro
+ * Cognome: Melnyk
+ * Matricola:761001
+ * Sede: VA
+ *
+ * Nome: Gianluca
+ * Cognome: Melis
+ * Matricola:761289
+ *
+ * Sede: VA
+ * Nome: Simone
+ * Cognome: Zamberletti
+ * Matricola:761355
+ * Sede: VA
+ *
+ * Nome: Davide
+ * Cognome: Redemagni
+ * Matricola:760043
+ * Sede: VA
+ */
 package theknife.remote;
 
 import theknife.*;
@@ -6,8 +27,13 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 
 /**
- * Interfaccia remota per il servizio TheKnife.
- * Definisce i metodi che il server mette a disposizione dei client tramite RMI.
+ * Interfaccia remota per il servizio TheKnife tramite RMI.
+ * Fornisce i metodi per la gestione di utenti, ristoranti e recensioni con persistenza su database SQL.
+ *
+ * @author Alessandro Melnyk
+ * @author Gianluca Melis
+ * @author Simone Zamberletti
+ * @author Davide Redemagni
  */
 public interface TheKnifeService extends Remote {
 
@@ -34,11 +60,25 @@ public interface TheKnifeService extends Remote {
 
     /**
      * Recupera la lista di tutti i ristoranti nel sistema.
+     * @return lista di tutti i ristoranti registrati
+     * @throws RemoteException in caso di errori di comunicazione
      */
     ArrayList<Ristorante> getAllRistoranti() throws RemoteException;
 
     /**
      * Ricerca avanzata di ristoranti tramite filtri multipli eseguita sul server.
+     * @param citta filtro città
+     * @param lat latitudine
+     * @param lon longitudine
+     * @param nome filtro nome
+     * @param tipoCucina filtro tipo cucina
+     * @param prezzoMin prezzo minimo
+     * @param prezzoMax prezzo massimo
+     * @param delivery filtro consegna
+     * @param online filtro prenotazione online
+     * @param ratingMin rating minimo
+     * @return lista dei ristoranti che soddisfano i criteri
+     * @throws RemoteException in caso di errori di comunicazione
      */
     ArrayList<Ristorante> cercaRistorantiAvanzata(
             String citta, Double lat, Double lon, String nome, String tipoCucina,
@@ -84,17 +124,25 @@ public interface TheKnifeService extends Remote {
 
     /**
      * Recupera tutte le recensioni associate a un ristorante.
+     * @param idRistorante ID del ristorante
+     * @return lista di recensioni associate
+     * @throws RemoteException in caso di errori di comunicazione
      */
     ArrayList<Recensione> getRecensioniByRistorante(int idRistorante) throws RemoteException;
 
     /**
      * Recupera tutte le recensioni scritte da un determinato utente.
+     * @param idUtente ID dell'utente
+     * @return lista di recensioni scritte dall'utente
+     * @throws RemoteException in caso di errori di comunicazione
      */
     ArrayList<Recensione> getRecensioniByUtente(int idUtente) throws RemoteException;
 
     /**
      * Recupera la media delle valutazioni e il numero di recensioni per un ristorante.
-     * Ritorna un array [media, conteggio].
+     * @param idRistorante ID del ristorante
+     * @return array [media, conteggio]
+     * @throws RemoteException in caso di errori di comunicazione
      */
     double[] getStatisticheRistorante(int idRistorante) throws RemoteException;
 

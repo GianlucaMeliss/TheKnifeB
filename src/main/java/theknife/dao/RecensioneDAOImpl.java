@@ -7,8 +7,8 @@
  * Nome: Gianluca
  * Cognome: Melis
  * Matricola:761289
- * Sede: VA
  *
+ * Sede: VA
  * Nome: Simone
  * Cognome: Zamberletti
  * Matricola:761355
@@ -28,8 +28,24 @@ import theknife.db.DatabaseConnection;
 import java.sql.*;
 import java.util.ArrayList;
 
+/**
+ * Implementazione dell'interfaccia {@link RecensioneDAO} per la persistenza su database SQL.
+ * Gestisce il ciclo di vita delle recensioni e delle risposte dei ristoratori.
+ *
+ * @author Alessandro Melnyk
+ * @author Gianluca Melis
+ * @author Simone Zamberletti
+ * @author Davide Redemagni
+ */
 public class RecensioneDAOImpl implements RecensioneDAO {
 
+    /**
+     * Aggiunge una nuova recensione al database.
+     * Se la recensione è una risposta di un ristoratore, verifica che non ne esista già una.
+     * 
+     * @param r l'oggetto recensione da inserire
+     * @return true se l'inserimento ha successo, false altrimenti
+     */
     @Override
     public boolean aggiungiRecensione(Recensione r) {
         int idPadre = (r.idRecensionePadre != null) ? r.idRecensionePadre : -1;
@@ -75,6 +91,13 @@ public class RecensioneDAOImpl implements RecensioneDAO {
         }
     }
 
+    /**
+     * Modifica una recensione esistente nel database.
+     * 
+     * @param idRecensione l'identificativo della recensione da modificare
+     * @param r l'oggetto recensione con i nuovi dati
+     * @return true se l'operazione ha successo, false altrimenti
+     */
     @Override
     public boolean modificaRecensione(int idRecensione, Recensione r) {
         String sql = "UPDATE Recensioni SET voto = ?, commento = ?, data = ? WHERE id_recensione = ?";
@@ -91,6 +114,13 @@ public class RecensioneDAOImpl implements RecensioneDAO {
         }
     }
 
+    /**
+     * Elimina una recensione dal database.
+     * L'operazione è transazionale: elimina prima tutte le risposte associate.
+     * 
+     * @param idRecensione l'identificativo della recensione da eliminare
+     * @return true se l'operazione ha successo, false altrimenti
+     */
     @Override
     public boolean eliminaRecensione(int idRecensione) {
         String sqlReplies = "DELETE FROM Recensioni WHERE id_recensione_padre = ?";
@@ -116,6 +146,13 @@ public class RecensioneDAOImpl implements RecensioneDAO {
         }
     }
 
+    /**
+     * Recupera tutte le recensioni di un determinato ristorante.
+     * Include lo username dell'autore tramite JOIN con la tabella Utenti.
+     * 
+     * @param idRistorante l'identificativo del ristorante
+     * @return una lista di oggetti recensione
+     */
     @Override
     public ArrayList<Recensione> getRecensioniByRistorante(int idRistorante) {
         ArrayList<Recensione> list = new ArrayList<>();
@@ -150,6 +187,13 @@ public class RecensioneDAOImpl implements RecensioneDAO {
         return list;
     }
 
+    /**
+     * Recupera le recensioni scritte da un utente specifico.
+     * Include il nome del ristorante tramite JOIN.
+     * 
+     * @param idUtente l'identificativo dell'utente
+     * @return una lista di oggetti recensione
+     */
     @Override
     public ArrayList<Recensione> getRecensioniByUtente(int idUtente) {
         ArrayList<Recensione> list = new ArrayList<>();
@@ -181,6 +225,12 @@ public class RecensioneDAOImpl implements RecensioneDAO {
         return list;
     }
 
+    /**
+     * Calcola le statistiche (media voti e numero totale) per un ristorante.
+     * 
+     * @param idRistorante l'identificativo del ristorante
+     * @return un array con [media, totale]
+     */
     @Override
     public double[] getStatisticheRistorante(int idRistorante) {
         String sql = "SELECT AVG(voto) AS media, COUNT(*) AS totale FROM Recensioni WHERE fk_id_ristorante = ? AND id_recensione_padre IS NULL";        try (Connection conn = DatabaseConnection.getConnection();

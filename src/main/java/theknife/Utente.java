@@ -1,3 +1,24 @@
+/*
+ * Nome: Alessandro
+ * Cognome: Melnyk
+ * Matricola:761001
+ * Sede: VA
+ *
+ * Nome: Gianluca
+ * Cognome: Melis
+ * Matricola:761289
+ *
+ * Sede: VA
+ * Nome: Simone
+ * Cognome: Zamberletti
+ * Matricola:761355
+ * Sede: VA
+ *
+ * Nome: Davide
+ * Cognome: Redemagni
+ * Matricola:760043
+ * Sede: VA
+ */
 package theknife;
 
 import java.io.Serializable;
@@ -9,6 +30,9 @@ import java.time.LocalDate;
  * Estende {@link OperazioniUtente}.
  * Implementa {@link Serializable} per la trasmissione RMI.
  *
+ * @author Alessandro Melnyk
+ * @author Gianluca Melis
+ * @author Simone Zamberletti
  * @author Davide Redemagni
  */
 public abstract class Utente extends OperazioniUtente implements Serializable {
@@ -42,7 +66,15 @@ public abstract class Utente extends OperazioniUtente implements Serializable {
 
     // <editor-fold desc="Costruttori">
     /**
-     * Costruttore completo.
+     * Costruttore completo con ID.
+     * @param Nome Nome dell'utente
+     * @param Cognome Cognome dell'utente
+     * @param Username Username per il login
+     * @param Password Password (cifrata)
+     * @param DataNasc Data di nascita
+     * @param Domicilio Indirizzo dell'utente
+     * @param Ruolo Ruolo (CLIENTE o RISTORATORE)
+     * @param IdUtente ID univoco dal database
      */
     public Utente(String Nome, String Cognome, String Username, String Password, LocalDate DataNasc, String Domicilio, Ruolo Ruolo, int IdUtente) {
         this(Nome, Cognome, Username, Password, DataNasc, Domicilio, Ruolo);
@@ -50,6 +82,14 @@ public abstract class Utente extends OperazioniUtente implements Serializable {
     }
     /**
      * Costruttore principale con validazione, senza ID.
+     * @param Nome Nome dell'utente
+     * @param Cognome Cognome dell'utente
+     * @param Username Username per il login
+     * @param Password Password (cifrata)
+     * @param DataNasc Data di nascita
+     * @param Domicilio Indirizzo dell'utente
+     * @param Ruolo Ruolo (CLIENTE o RISTORATORE)
+     * @throws IllegalArgumentException se i parametri non rispettano i criteri di validazione
      */
     public Utente(String Nome, String Cognome, String Username, String Password, LocalDate DataNasc, String Domicilio, Ruolo Ruolo) {
         this.nome = Nome;
@@ -77,6 +117,12 @@ public abstract class Utente extends OperazioniUtente implements Serializable {
     }
     /**
      * Costruttore per inserimento rapido (senza data di nascita).
+     * @param Nome Nome dell'utente
+     * @param Cognome Cognome dell'utente
+     * @param Username Username per il login
+     * @param Password Password (cifrata)
+     * @param Domicilio Indirizzo dell'utente
+     * @param Ruolo Ruolo (CLIENTE o RISTORATORE)
      */
     public Utente(String Nome, String Cognome, String Username, String Password, String Domicilio, Ruolo Ruolo) {
         this(Nome, Cognome, Username, Password, null, Domicilio, Ruolo);

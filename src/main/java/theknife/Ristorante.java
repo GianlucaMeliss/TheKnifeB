@@ -19,47 +19,28 @@
  * Matricola:760043
  * Sede: VA
  */
-/*
- * Nome: Alessandro
- * Cognome: Melnyk
- * Matricola:761001
- * Sede: VA
- *
- * Nome: Gianluca
- * Cognome: Melis
- * Matricola:761289
- * Sede: VA
- *
- * Nome: Simone
- * Cognome: Zamberletti
- * Matricola:761355
- * Sede: VA
- *
- * Nome: Davide
- * Cognome: Redemagni
- * Matricola:760043
- * Sede: VA
- */
+
 package theknife;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 
-
-
-
 /**
  * Classe che rappresenta un ristorante.
- * Contiene informazioni anagrafiche e funzionali come nome, indirizzo, città, nazione,
- * tipi di cucina, possibilità di consegna o prenotazione online, prezzo medio e ID univoco.
+ * Contiene tutte le informazioni relative a un esercizio di ristorazione,
+ * tra cui il nome, la posizione (città e nazione), i tipi di cucina offerti,
+ * la fascia di prezzo e i servizi disponibili (delivery, prenotazione online).
  * Implementa {@link Serializable} per la trasmissione RMI.
  *
+ * @author Alessandro Melnyk
  * @author Gianluca Melis
+ * @author Simone Zamberletti
  * @author Davide Redemagni
  */
 public class Ristorante implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    // <editor-fold desc="Attributi">
     public int idRistorante;
     public String nome;
     public String indirizzo;
@@ -73,6 +54,18 @@ public class Ristorante implements Serializable {
     public ArrayList<TipoCucina> tipoCucina;
 
 
+    /**
+     * Costruttore completo per la creazione di un ristorante con coordinate geografiche.
+     * 
+     * @param nome Nome del ristorante
+     * @param indirizzo Indirizzo fisico
+     * @param citta Città di ubicazione
+     * @param nazione Nazione di ubicazione
+     * @param latitudine Latitudine per ricerca geografica
+     * @param longitudine Longitudine per ricerca geografica
+     * @param prezzo Fascia di prezzo medio
+     * @param tipoCucina Lista dei tipi di cucina offerti
+     */
     public Ristorante(String nome, String indirizzo, String citta, String nazione,
                       Double latitudine, Double longitudine, Float prezzo, ArrayList<TipoCucina> tipoCucina) {
         if (nome == null || nome.isBlank()) throw new IllegalArgumentException("Nome non valido.");
@@ -93,16 +86,33 @@ public class Ristorante implements Serializable {
     }
 
     /**
-     * Costruttore compatibile senza coordinate (imposta coordinate a 0.0).
+     * Costruttore semplificato senza coordinate geografiche (impostate a 0.0).
+     * 
+     * @param nome Nome del ristorante
+     * @param indirizzo Indirizzo fisico
+     * @param citta Città di ubicazione
+     * @param nazione Nazione di ubicazione
+     * @param prezzo Fascia di prezzo medio
+     * @param tipoCucina Lista dei tipi di cucina offerti
      */
     public Ristorante(String nome, String indirizzo, String citta, String nazione, Float prezzo, ArrayList<TipoCucina> tipoCucina) {
         this(nome, indirizzo, citta, nazione, 0.0, 0.0, prezzo, tipoCucina);
     }
 
+    /**
+     * Verifica se il nome della città è valido (formato testo).
+     * @param citta nome città da validare
+     * @return true se valido
+     */
     public static boolean isCittaValida(String citta) {
         return citta != null && citta.matches("^[\\p{L}\\s'\\-/\\.]+$");
     }
 
+    /**
+     * Verifica se il prezzo indicato è valido (non negativo).
+     * @param prezzo valore del prezzo da validare
+     * @return true se valido
+     */
     public static boolean isPrezzoValido(Float prezzo) {
         return prezzo != null && prezzo >= 0;
     }

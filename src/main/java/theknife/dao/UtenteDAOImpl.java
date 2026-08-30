@@ -1,3 +1,24 @@
+/*
+ * Nome: Alessandro
+ * Cognome: Melnyk
+ * Matricola:761001
+ * Sede: VA
+ *
+ * Nome: Gianluca
+ * Cognome: Melis
+ * Matricola:761289
+ *
+ * Sede: VA
+ * Nome: Simone
+ * Cognome: Zamberletti
+ * Matricola:761355
+ * Sede: VA
+ *
+ * Nome: Davide
+ * Cognome: Redemagni
+ * Matricola:760043
+ * Sede: VA
+ */
 package theknife.dao;
 
 import theknife.*;
@@ -5,11 +26,29 @@ import theknife.db.DatabaseConnection;
 import java.sql.*;
 import java.time.LocalDate;
 
+/**
+ * Implementazione dell'interfaccia {@link UtenteDAO} per la gestione degli utenti su database SQL.
+ * Gestisce l'autenticazione e la creazione di nuovi profili utente.
+ *
+ * @author Alessandro Melnyk
+ * @author Gianluca Melis
+ * @author Simone Zamberletti
+ * @author Davide Redemagni
+ */
 public class UtenteDAOImpl implements UtenteDAO {
 
+    /**
+     * Esegue il login di un utente interrogando la tabella 'Utenti'.
+     * In base al ruolo memorizzato nel database, restituisce un'istanza di {@link UtenteRegistrato} o {@link Ristoratore}.
+     *
+     * @param username lo username dell'utente
+     * @param passwordCifrata la password già cifrata tramite AES
+     * @return l'oggetto {@link Utente} corrispondente, null se le credenziali sono errate o in caso di errore SQL
+     */
     @Override
     public Utente eseguiLogin(String username, String passwordCifrata) {
         String sql = "SELECT * FROM Utenti WHERE username = ? AND password = ?";
+        // ... (rest of the code remains the same)
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -41,6 +80,12 @@ public class UtenteDAOImpl implements UtenteDAO {
         return null; // Login fallito
     }
 
+    /**
+     * Inserisce un nuovo record nella tabella 'Utenti' con i dati forniti.
+     *
+     * @param utente l'oggetto {@link Utente} contenente i dati da persistere
+     * @return true se l'inserimento è avvenuto correttamente, false altrimenti
+     */
     @Override
     public boolean registraUtente(Utente utente) {
         String sql = "INSERT INTO Utenti (nome, cognome, username, password, data_nascita, domicilio, ruolo) VALUES (?, ?, ?, ?, ?, ?, ?)";

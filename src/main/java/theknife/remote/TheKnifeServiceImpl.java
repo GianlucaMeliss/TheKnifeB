@@ -7,8 +7,8 @@
  * Nome: Gianluca
  * Cognome: Melis
  * Matricola:761289
- * Sede: VA
  *
+ * Sede: VA
  * Nome: Simone
  * Cognome: Zamberletti
  * Matricola:761355
@@ -28,6 +28,15 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 
+/**
+ * Implementazione del servizio remoto {@link TheKnifeService}.
+ * Coordina le operazioni di business delegando la persistenza dei dati ai rispettivi oggetti DAO su database SQL.
+ *
+ * @author Alessandro Melnyk
+ * @author Gianluca Melis
+ * @author Simone Zamberletti
+ * @author Davide Redemagni
+ */
 public class TheKnifeServiceImpl extends UnicastRemoteObject implements TheKnifeService {
     private static final long serialVersionUID = 1L;
 
