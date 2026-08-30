@@ -102,7 +102,16 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <outputFile>${project.build.directory}/ClientTK.jar</outputFile>
+                            <outputFile>${project.basedir}/bin/ClientTK.jar</outputFile>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <artifactSet>
+                                <excludes>
+                                    <!-- Il client non apre connessioni JDBC dirette. -->
+                                    <exclude>org.postgresql:postgresql</exclude>
+                                    <!-- JavaFX viene fornito dal SDK nativo del sistema operativo. -->
+                                    <exclude>org.openjfx:*</exclude>
+                                </excludes>
+                            </artifactSet>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>theknife.TheKnife</mainClass>
@@ -118,7 +127,14 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <outputFile>${project.build.directory}/ServerTK.jar</outputFile>
+                            <outputFile>${project.basedir}/bin/ServerTK.jar</outputFile>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <artifactSet>
+                                <excludes>
+                                    <!-- Il server non usa JavaFX. -->
+                                    <exclude>org.openjfx:*</exclude>
+                                </excludes>
+                            </artifactSet>
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <mainClass>theknife.server.ServerTK</mainClass>

@@ -1,3 +1,33 @@
+ISTRUZIONI MAVEN AGGIORNATE (sostituiscono le istruzioni successive obsolete)
+==========================================================================
+
+Prerequisiti: JDK 21 o successivo, Apache Maven 3.9 o successivo e PostgreSQL
+per l'esecuzione del server. Dalla radice del progetto eseguire:
+
+    mvn clean package
+
+Maven crea automaticamente i due JAR eseguibili richiesti nella cartella `bin`:
+`bin/ServerTK.jar` e `bin/ClientTK.jar`.
+
+Avviare prima il server (il driver PostgreSQL e' gia' incluso nel JAR):
+
+    java -jar bin/ServerTK.jar
+
+Avviare quindi il client con il JavaFX SDK nativo incluso nel repository:
+
+Windows:
+
+    java --module-path "lib\javafx-sdk-24.0.1\lib" --add-modules javafx.controls,javafx.fxml -jar bin\ClientTK.jar
+
+macOS:
+
+    java --module-path "lib/javafx-sdk-24.0-2.2/lib" --add-modules javafx.controls,javafx.fxml -jar bin/ClientTK.jar
+
+I JAR sono gli stessi su Windows e macOS. JavaFX contiene librerie native
+specifiche per sistema operativo, quindi il client deve ricevere tramite
+`--module-path` la cartella JavaFX corretta (gia' presente in `lib`).
+
+
 Progetto TheKnife
 1). Prerequisiti Software
 

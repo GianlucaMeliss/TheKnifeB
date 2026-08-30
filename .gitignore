@@ -3,9 +3,12 @@
 *.jar
 *.war
 
+# I JAR distribuiti dell'applicazione fanno eccezione.
+!/bin/
+!/bin/*.jar
+
 # Cartelle di output (dove finisce il codice compilato)
 /out/
-/bin/
 /build/
 /target/
 
