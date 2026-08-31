@@ -31,7 +31,9 @@
             <version>42.7.2</version>
         </dependency>
 
-        <!-- Librerie JavaFX -->
+        <!-- ========================================================= -->
+        <!-- DIPENDENZE JAVAFX UNIVERSALI -->
+        <!-- ========================================================= -->
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -42,6 +44,29 @@
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+
+        <!-- File nativi per Windows -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>win</classifier>
+        </dependency>
+        <!-- File nativi per Mac (Processori Apple Silicon) -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>mac-aarch64</classifier>
+        </dependency>
+        <!-- File nativi per Linux -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+            <version>${javafx.version}</version>
+            <classifier>linux</classifier>
+        </dependency>
+        <!-- ========================================================= -->
     </dependencies>
 
     <build>
@@ -81,13 +106,6 @@
                 </configuration>
             </plugin>
 
-            <!-- Plugin per generare la JavaDoc -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.6.3</version>
-            </plugin>
-
             <!-- Plugin per generare i JAR separati (ClientTK.jar e ServerTK.jar) -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -102,14 +120,13 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <!-- I JAR verranno creati nella cartella "bin" del progetto -->
                             <outputFile>${project.basedir}/bin/ClientTK.jar</outputFile>
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <artifactSet>
                                 <excludes>
-                                    <!-- Il client non apre connessioni JDBC dirette. -->
                                     <exclude>org.postgresql:postgresql</exclude>
-                                    <!-- JavaFX viene fornito dal SDK nativo del sistema operativo. -->
-                                    <exclude>org.openjfx:*</exclude>
+                                    <!-- JAVAFX NON È PIÙ ESCLUSO QUI -->
                                 </excludes>
                             </artifactSet>
                             <transformers>
@@ -131,7 +148,6 @@
                             <createDependencyReducedPom>false</createDependencyReducedPom>
                             <artifactSet>
                                 <excludes>
-                                    <!-- Il server non usa JavaFX. -->
                                     <exclude>org.openjfx:*</exclude>
                                 </excludes>
                             </artifactSet>
