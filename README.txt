@@ -1,133 +1,63 @@
-ISTRUZIONI MAVEN AGGIORNATE (sostituiscono le istruzioni successive obsolete)
-==========================================================================
+Progetto TheKnife - Architettura Client/Server
 
-Prerequisiti: JDK 21 o successivo, Apache Maven 3.9 o successivo e PostgreSQL
-per l'esecuzione del server. Dalla radice del progetto eseguire:
-
-    mvn clean package
-
-Maven crea automaticamente i due JAR eseguibili richiesti nella cartella `bin`:
-`bin/ServerTK.jar` e `bin/ClientTK.jar`.
-
-Avviare prima il server (il driver PostgreSQL e' gia' incluso nel JAR):
-
-    java -jar bin/ServerTK.jar
-
-Avviare quindi il client con il JavaFX SDK nativo incluso nel repository:
-
-Windows:
-
-    java --module-path "lib\javafx-sdk-24.0.1\lib" --add-modules javafx.controls,javafx.fxml -jar bin\ClientTK.jar
-
-macOS:
-
-    java --module-path "lib/javafx-sdk-24.0-2.2/lib" --add-modules javafx.controls,javafx.fxml -jar bin/ClientTK.jar
-
-I JAR sono gli stessi su Windows e macOS. JavaFX contiene librerie native
-specifiche per sistema operativo, quindi il client deve ricevere tramite
-`--module-path` la cartella JavaFX corretta (gia' presente in `lib`).
-
-
-Progetto TheKnife
 1). Prerequisiti Software
 
 Prima di procedere, è necessario assicurarsi che sul sistema sia installato il seguente software:
 
-1.  Java Development Kit (JDK): È richiesta una versione 17 o superiore. Si consiglia di scaricare una distribuzione standard come [Eclipse Temurin (Adoptium)](https://adoptium.net/).
-2.  JavaFX SDK: JavaFX non è più incluso nel JDK e deve essere scaricato separatamente.
-       All’interno del progetto nella cartella lib sono contenute due versioni di javafx, la versione denominata “javafx-sdk-24.0.1” è quella predisposta per l’utilizzo su sistemi operativi windows mente la cartella denominata “javafx-sdk-24.0-2.2” è quella predisposta per l’utilizzo su sistemi operativi mac
+1. Java Development Kit (JDK): È richiesta una versione 21 o superiore. Si consiglia di scaricare una distribuzione standard come Eclipse Temurin (Adoptium).
 
------
 
-2). Compilazione ed Esecuzione da Sorgente (con IntelliJ IDEA)
-
-Questa è la procedura consigliata per esaminare il codice ed eseguire l'applicazione in un ambiente di sviluppo.
-
-2.1. Configurazione del Progetto
-
-1.  Aprire il Progetto: Aprire la cartella del progetto in IntelliJ IDEA tramite `File > Open`.
-2.  Impostare l'SDK del Progetto:
-       Andare su `File > Project Structure... > Project`.
-       Assicurarsi che nel campo `SDK` sia selezionato un JDK 17 o superiore.
-3.  Aggiungere le Librerie:
-       Nella stessa finestra (`Project Structure`), andare su Libraries.
-       Cliccare il pulsante `+` e scegliere `Java`.
-       Navigare e selezionare la cartella `lib` interna al progetto (quella che contiene sia il JavaFX SDK che il file `.jar` di Gson).
-4.  Configurare la Struttura dei Moduli:
-       Sempre in `Project Structure`, andare su Modules.
-       Assicurarsi che la cartella `src` sia marcata come Sources (blu).
-       Assicurarsi che la cartella `resources` sia marcata come Resources.
-5.  Creare la Configurazione di Avvio:
-       Andare su `Run > Edit Configurations...`.
-       Cliccare `+` e scegliere `Application`.
-       Name: Inserire un nome (es. `Avvia TheKnife`).
-       Main class: Cliccare sui tre puntini (`...`) e selezionare la classe ` theknife.TheKnife `.
-
-2.2. Impostazione delle VM Options (Passaggio Cruciale)
-
-Nella stessa finestra di `Edit Configurations`, è necessario specificare dove si trovano i moduli di JavaFX al momento dell'avvio.
-
-   Nel campo VM options, inserire la seguente riga. Questa configurazione è universale e funzionerà su qualsiasi sistema operativo (Windows, macOS, Linux) senza bisogno di modifiche, a patto che la struttura del progetto con la cartella `lib` sia mantenuta.
-    --module-path "lib/javafx-sdk-24.0-2.2/lib" --add-modules javafx.controls,javafx.fxml
-    (Nota: sostituire `24.0-2.2` con `24.0.1` nel caso in cui utilizziate un sistema windows)
-
-2.3. Avvio
-
-1.  Cliccare `Apply` e `OK` per salvare la configurazione.
-2.  Eseguire un `Build > Rebuild Project` per assicurarsi che tutte le impostazioni siano state applicate.
-3.  Avviare l'applicazione usando il pulsante "Play"
------
-2.4.Esecuzione da Terminale
-Questo metodo non richiede un IDE.
-
-Compilazione:
-
-Aprire un terminale o prompt dei comandi nella cartella principale del progetto (TheKnife).
-
-Eseguire il seguente comando che permette di posizionarsi nella cartella dove viene estratto il progetto e il programma verrà lanciato (adattando la versione di JavaFX e il separatore di percorso: : per Mac/Linux, ; per Windows):
-
-Su Windows:
-cd C:\Users\Simoz\IdeaProjects\Melnyk_761001 (sostituire il percorso con quello della cartella dove è stato estratto l’archivio)
-e dopo eseguire:
-java --module-path "lib\javafx-sdk-24.0.1\lib" --add-modules javafx.controls,javafx.fxml -jar Melnyk_761001.jar
-
-Su Mac/Linux:
-cd cd /Users/alessandro/Desktop/Melnyk_761001cd /Users/alessandro/Desktop/Melnyk_761001 (sostituire il percorso con quello della cartella dove è stato estratto l’archivio)
-e dopo eseguire:
-java --module-path "lib\javafx-sdk-24.0-2.2\lib" --add-modules javafx.controls,javafx.fxml -jar Melnyk_761001.jar (sostituire il percorso con quello della cartella dove è stato estratto l’archivio)
+2. PostgreSQL: È richiesta un'istanza attiva del database relazionale. Il database deve contenere lo schema e le tabelle necessarie (ristoranti, utenti, recensioni, ecc.) importabili tramite lo script fornito nel progetto.
 
 
 
-3). Esecuzione del File .jar Compilato
+Nota: A differenza delle versioni precedenti, le librerie JavaFX sono ora integrate direttamente all'interno dell'eseguibile del Client grazie all'utilizzo di Maven. Non è più necessario scaricare SDK esterni o configurare percorsi complessi.
 
-Se si desidera eseguire l'applicazione senza un IDE, è necessario un file `.jar` eseguibile.
+---
 
-3.1. Prerequisiti
+2). Compilazione del Progetto (tramite Maven)
 
-L'utente deve avere installato:
+Il progetto utilizza Maven per la gestione delle dipendenze e l'automazione della build.
 
-   Una versione di Java (JRE o JDK) 17 o superiore.
-   Il JavaFX SDK scaricato e decompresso in una cartella sul proprio computer.
-
-3.2. Comando di Avvio
-
-Per eseguire il file ` Melnyk_761001.jar` , è necessario usare il terminale o il prompt dei comandi e specificare il percorso ai moduli JavaFX.
-
-1.  Aprire un terminale.
-
-2.  Navigare con il comando `cd` fino alla cartella dove si trova il file `.jar`. 
-(ES. cd C:\Users\Simoz\IdeaProjects\Melnyk_761001)
-
-3.  Eseguire il seguente comando, sostituendo il percorso del JavaFX SDK con quello corretto per la propria macchina: (java --module-path /percorso/completo/del/vostro/javafx-sdk/lib --add-modules javafx.controls,javafx.fxml -jar Melnyk_761001.jar)
+1. Aprire un terminale o prompt dei comandi nella cartella principale del progetto (dove si trova il file pom.xml).
 
 
-Esempi di Percorso
-
-  Windows: `"C:\javafx-sdk-24.0.1\lib"`
-  macOS/Linux: `"/Users/nomeutente/sdk/javafx-sdk-24.0.1/lib"`
-
-(Nota: se il percorso contiene spazi, deve essere racchiuso tra virgolette `"`)
+2. Eseguire il seguente comando:
+mvn clean package
+3. Al termine dell'operazione, i file eseguibili "ServerTK.jar" e "ClientTK.jar" verranno generati automaticamente all'interno della cartella "target".
 
 
-AVVIO PERSONALE=cd Desktop/Melnyk_761001;
-java --module-path /Users/gianluca/Desktop/Melnyk_761001/lib/javafx-sdk-24.0-2.2/lib --add-modules javafx.controls,javafx.fxml -jar Melnyk_761001.jar
+4. Per la corretta esecuzione secondo le specifiche di consegna, assicurarsi di spostare i due file .jar all'interno della cartella "bin".
+
+
+
+---
+
+3). Esecuzione dell'Applicazione
+
+L'applicazione è basata su un'architettura distribuita e necessita dell'avvio separato del modulo server e del modulo client. Entrambi gli eseguibili si trovano nella cartella "bin".
+
+3.1. Fase 1: Avvio del Server
+Il server gestisce la comunicazione RMI e l'interazione con il database PostgreSQL.
+
+1. Aprire un terminale o prompt dei comandi e navigare fino alla cartella "bin".
+
+
+2. Eseguire il comando:
+java -jar ServerTK.jar
+3. Seguire le istruzioni a schermo inserendo i parametri richiesti per la connessione al database: Host, Porta, Nome Database, Username e Password.
+
+
+4. Una volta visualizzato il messaggio di conferma e di attesa connessioni, lasciare la finestra del terminale aperta in background.
+
+
+
+3.2. Fase 2: Avvio del Client (Interfaccia Grafica)
+Dopo aver avviato correttamente il server, è possibile lanciare l'interfaccia utente.
+
+1. Aprire la cartella "bin".
+
+
+2. Eseguire l'applicazione con un semplice doppio clic sul file "ClientTK.jar".
+3. In alternativa (o in caso di problemi con le associazioni di file del proprio sistema operativo), aprire una nuova finestra del terminale nella cartella "bin" ed eseguire il comando:
+java -jar ClientTK.jar
