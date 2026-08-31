@@ -1,13 +1,14 @@
 --
 -- PostgreSQL database dump
 --
-
-\restrict TkpB7NIDR8cYCYc9tojBtDvRd3SmP0vTVQvQXbGq39frbFhDlPQZoxlo2HTeOJh
-
 -- Dumped from database version 18.4
 -- Dumped by pg_dump version 18.4
 
 -- Started on 2026-08-31 15:34:14 CEST
+
+--Completo azzeramento del db theknife
+DROP SCHEMA public CASCADE;
+CREATE SCHEMA public;
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -41933,5 +41934,4 @@ ALTER TABLE ONLY public.ristorante_cucina
 -- PostgreSQL database dump complete
 --
 
-\unrestrict TkpB7NIDR8cYCYc9tojBtDvRd3SmP0vTVQvQXbGq39frbFhDlPQZoxlo2HTeOJh
 

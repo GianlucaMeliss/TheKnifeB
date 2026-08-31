@@ -160,6 +160,53 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- ========================================================= -->
+            <!-- PLUGIN PER IL DATABASE (sql-maven-plugin)                 -->
+            <!-- ========================================================= -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>sql-maven-plugin</artifactId>
+                <version>1.5</version>
+                <!-- Il plugin ha bisogno del driver per parlare con Postgres -->
+                <dependencies>
+                    <dependency>
+                        <groupId>org.postgresql</groupId>
+                        <artifactId>postgresql</artifactId>
+                        <version>42.7.2</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <driver>org.postgresql.Driver</driver>
+                    <!-- ATTENZIONE: Inserisci qui l'URL corretto del tuo DB Postgres locale -->
+                    <url>jdbc:postgresql://localhost:5432/theknife</url>
+                    <!-- ATTENZIONE: Inserisci username e password di pgAdmin -->
+                    <username>postgres</username>
+                    <password>postgres</password>
+                    <!-- Permette al plugin di non bloccarsi su errori minori e autocommittare -->
+                    <autocommit>true</autocommit>
+                    <!-- Punta al file theknife.sql che hai nella cartella doc -->
+                    <srcFiles>
+                        <srcFile>doc/artefatti/theknife.sql</srcFile>
+                    </srcFiles>
+                </configuration>
+            </plugin>
+
+            <!-- ========================================================= -->
+            <!-- PLUGIN PER LA JAVADOC (maven-javadoc-plugin)              -->
+            <!-- ========================================================= -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <!-- Salva la javadoc generata nella cartella doc/javadoc come da struttura -->
+                    <outputDirectory>${project.basedir}/doc/javadoc</outputDirectory>
+                    <reportOutputDirectory>${project.basedir}/doc</reportOutputDirectory>
+                    <destDir>javadoc</destDir>
+                    <show>private</show>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
