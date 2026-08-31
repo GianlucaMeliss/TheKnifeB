@@ -72,11 +72,31 @@ Fase 2: Avvio del Client (Interfaccia Grafica)
 Dopo aver avviato correttamente il server, è possibile lanciare l'interfaccia utente.
 
 * Per utenti Windows: 
-  Aprire la cartella "bin" ed eseguire l'applicazione con un semplice doppio clic sul file "ClientTK.jar". (In alternativa, o in caso di problemi con le associazioni di file, aprire un terminale nella cartella "bin" ed eseguire: java -jar ClientTK.jar).
+  Aprire la cartella "bin" ed eseguire l'applicazione con un semplice doppio clic sul file "ClientTK.jar". 
+  (In alternativa, o in caso di problemi con le associazioni di file, aprire un terminale nella cartella "bin" ed eseguire: java -jar ClientTK.jar).
 
-* Per utenti macOS / Linux: 
-  Poiché JavaFX richiede librerie grafiche native che differiscono in base al sistema operativo e all'architettura dei processori (es. Intel vs Apple Silicon), l'eseguibile "ClientTK.jar" fornito di default nella cartella "bin" è pre-compilato per ambiente Windows. 
-  Per avviare il Client correttamente su macOS o Linux, aprire un terminale nella cartella radice del progetto ed eseguire nuovamente il comando:
-  mvn clean package
-  
-  (Questo comando individuerà il vostro sistema operativo, scaricherà in automatico le librerie native corrette e genererà un nuovo "ClientTK.jar" compatibile all'interno della cartella "bin", pronto per essere avviato).
+* Per utenti macOS AppleSilicon: 
+  Aprire la cartella "bin" ed eseguire l'applicazione con un semplice doppio clic sul file "ClientTK.jar". 
+  (In alternativa, o in caso di problemi con le associazioni di file, aprire un terminale nella cartella "bin" ed eseguire: java -jar ClientTK.jar).
+
+* Per gli altri utenti:
+  È necessario scaricare autonomamente la versione di javaFx 21.x.x
+  Di seguito un'esempio per la configurazione dell'ambiente di macOs serie Intel
+    PASSO 1: SCARICARE JAVAFX SDK (Solo per Mac Intel)
+      1. Vai sul sito ufficiale di download di JavaFX (es. https://gluonhq.com/products/javafx/#downloads)
+      2. Seleziona il sistema operativo "macOS".
+      3. Assicurati di scaricare l'architettura "x64" (che corrisponde a Intel, NON scaricare aarch64).
+      4. Estrai la cartella scaricata in una posizione comoda, ad esempio sulla Scrivania. 
+         (La cartella si chiamerà ad esempio "javafx-sdk-21.0.12").
+    ---
+
+    PASSO 2: AVVIARE IL GIOCO DA TERMINALE
+      1. Apri il Terminale del Mac.
+      2. Invece di usare il classico "java -jar", devi indicare a Java dove trovare la cartella "lib" del JavaFX appena scaricato.
+
+      Usa questo comando (sostituendo i percorsi con quelli reali del tuo computer):
+
+      java --module-path /percorso/della/cartella/javafx-sdk-21.0.12/lib --add-modules javafx.controls,javafx.fxml -jar /percorso/del/ClientTK.jar
+
+      ESEMPIO PRATICO (se hai estratto l'SDK sulla Scrivania e ti trovi nella cartella del JAR):
+      java --module-path ~/Desktop/javafx-sdk-21.0.2/lib --add-modules javafx.controls,javafx.fxml -jar ClientTK.jar
